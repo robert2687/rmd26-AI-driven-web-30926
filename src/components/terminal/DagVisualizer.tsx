@@ -1,5 +1,22 @@
 import React, { useState } from 'react';
-import { BrainCircuit, Network, Code2, ShieldCheck, Wrench, Cpu, CheckCircle2, AlertTriangle, ArrowRight, Play, Check, Clock } from 'lucide-react';
+import { 
+  BrainCircuit, 
+  Network, 
+  Code2, 
+  ShieldCheck, 
+  Wrench, 
+  Cpu, 
+  CheckCircle2, 
+  AlertTriangle, 
+  ArrowRight, 
+  Play, 
+  Check, 
+  Clock, 
+  Layers,
+  Activity,
+  Sparkles
+} from 'lucide-react';
+import { AgentForceGraph } from './AgentForceGraph';
 
 export interface DagNode {
   id: string;
@@ -25,6 +42,7 @@ export const DagVisualizer: React.FC<DagVisualizerProps> = ({
   onSelectNode
 }) => {
   const [selectedNodeId, setSelectedNodeId] = useState<string>('planner');
+  const [viewMode, setViewMode] = useState<'force' | 'linear'>('force');
 
   const nodes: DagNode[] = [
     {
@@ -183,132 +201,172 @@ export const DagVisualizer: React.FC<DagVisualizerProps> = ({
           </p>
         </div>
 
-        <div className="flex items-center gap-2 text-[11px] text-zinc-400">
-          <span>Active Phase:</span>
-          <span className="text-cyan-400 font-bold uppercase">{selfHealPhase !== 'idle' ? `Self-Healing (${selfHealPhase})` : activeAgent}</span>
-        </div>
-      </div>
-
-      {/* Mobile Stage Stepper (Visible on mobile/tablet) */}
-      <div className="sm:hidden space-y-2.5">
-        <div className="flex items-center justify-between text-[11px] text-zinc-400 pb-1 border-b border-zinc-800">
-          <span>SELECT AGENT STAGE:</span>
-          <span>{nodes.findIndex((n) => n.id === selectedNodeId) + 1} of {nodes.length}</span>
-        </div>
-        <div className="grid grid-cols-4 gap-1.5">
-          {nodes.map((n, i) => (
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* Mode Switcher */}
+          <div className="flex items-center gap-1 bg-zinc-900 border border-zinc-800 rounded-lg p-0.5 text-xs">
             <button
-              key={n.id}
-              onClick={() => {
-                setSelectedNodeId(n.id);
-                if (onSelectNode) onSelectNode(n.id);
-              }}
-              className={`px-2 py-1.5 rounded-lg text-[10px] font-mono font-bold transition-all truncate border ${
-                selectedNodeId === n.id
-                  ? 'bg-violet-600 text-white border-violet-400 shadow-sm'
-                  : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-white'
+              onClick={() => setViewMode('force')}
+              className={`px-3 py-1 rounded-md font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                viewMode === 'force'
+                  ? 'bg-gradient-to-r from-violet-600 to-cyan-600 text-white shadow-sm'
+                  : 'text-zinc-400 hover:text-white'
               }`}
             >
-              {i + 1}. {n.agent}
+              <Network className="w-3.5 h-3.5" />
+              <span>D3 Force Graph</span>
             </button>
-          ))}
+            <button
+              onClick={() => setViewMode('linear')}
+              className={`px-3 py-1 rounded-md font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                viewMode === 'linear'
+                  ? 'bg-gradient-to-r from-violet-600 to-cyan-600 text-white shadow-sm'
+                  : 'text-zinc-400 hover:text-white'
+              }`}
+            >
+              <Layers className="w-3.5 h-3.5" />
+              <span>Linear Pipeline</span>
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2 text-[11px] text-zinc-400">
+            <span>Phase:</span>
+            <span className="text-cyan-400 font-bold uppercase">{selfHealPhase !== 'idle' ? `Self-Healing (${selfHealPhase})` : activeAgent}</span>
+          </div>
         </div>
       </div>
 
-      {/* Interactive Horizontal Flow Graph (Desktop / Wide View) */}
-      <div className="overflow-x-auto pb-4 pt-2">
-        <div className="text-[10px] text-zinc-500 mb-1.5 sm:hidden flex items-center justify-between">
-          <span>Interactive DAG Pipeline:</span>
-          <span>← Swipe horizontally →</span>
-        </div>
-        <div className="flex items-center gap-3 min-w-[760px]">
-          {nodes.map((node, index) => {
-            const isSelected = selectedNodeId === node.id;
-            return (
-              <React.Fragment key={node.id}>
-                <div
+      {/* Conditional View Rendering */}
+      {viewMode === 'force' ? (
+        <AgentForceGraph
+          activeAgent={activeAgent}
+          selfHealPhase={selfHealPhase}
+          onSelectAgent={onSelectNode}
+          selectedAgentId={selectedNodeId}
+        />
+      ) : (
+        <>
+          {/* Mobile Stage Stepper (Visible on mobile/tablet) */}
+          <div className="sm:hidden space-y-2.5">
+            <div className="flex items-center justify-between text-[11px] text-zinc-400 pb-1 border-b border-zinc-800">
+              <span>SELECT AGENT STAGE:</span>
+              <span>{nodes.findIndex((n) => n.id === selectedNodeId) + 1} of {nodes.length}</span>
+            </div>
+            <div className="grid grid-cols-4 gap-1.5">
+              {nodes.map((n, i) => (
+                <button
+                  key={n.id}
                   onClick={() => {
-                    setSelectedNodeId(node.id);
-                    if (onSelectNode) onSelectNode(node.id);
+                    setSelectedNodeId(n.id);
+                    if (onSelectNode) onSelectNode(n.id);
                   }}
-                  className={`cursor-pointer w-44 rounded-xl p-3 border transition-all duration-200 flex flex-col justify-between shrink-0 ${getNodeColor(
-                    node.status
-                  )} ${isSelected ? 'scale-105 ring-2 ring-violet-500' : ''}`}
+                  className={`px-2 py-1.5 rounded-lg text-[10px] font-mono font-bold transition-all truncate border ${
+                    selectedNodeId === n.id
+                      ? 'bg-violet-600 text-white border-violet-400 shadow-sm'
+                      : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-white'
+                  }`}
                 >
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-[10px] text-zinc-400 font-semibold">STAGE 0{index + 1}</span>
-                      {getStatusBadge(node.status)}
+                  {i + 1}. {n.agent}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Interactive Horizontal Flow Graph (Desktop / Wide View) */}
+          <div className="overflow-x-auto pb-4 pt-2">
+            <div className="text-[10px] text-zinc-500 mb-1.5 sm:hidden flex items-center justify-between">
+              <span>Interactive DAG Pipeline:</span>
+              <span>← Swipe horizontally →</span>
+            </div>
+            <div className="flex items-center gap-3 min-w-[760px]">
+              {nodes.map((node, index) => {
+                const isSelected = selectedNodeId === node.id;
+                return (
+                  <React.Fragment key={node.id}>
+                    <div
+                      onClick={() => {
+                        setSelectedNodeId(node.id);
+                        if (onSelectNode) onSelectNode(node.id);
+                      }}
+                      className={`cursor-pointer w-44 rounded-xl p-3 border transition-all duration-200 flex flex-col justify-between shrink-0 ${getNodeColor(
+                        node.status
+                      )} ${isSelected ? 'scale-105 ring-2 ring-violet-500' : ''}`}
+                    >
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-[10px] text-zinc-400 font-semibold">STAGE 0{index + 1}</span>
+                          {getStatusBadge(node.status)}
+                        </div>
+                        <div className="font-bold text-white text-xs truncate">{node.name}</div>
+                        <div className="text-[11px] text-zinc-400 line-clamp-1">{node.role}</div>
+                      </div>
+
+                      <div className="mt-3 pt-2 border-t border-zinc-800/80 flex items-center justify-between text-[10px] text-zinc-400">
+                        <span>Latency:</span>
+                        <span className="font-semibold text-zinc-200">{node.latency}</span>
+                      </div>
                     </div>
-                    <div className="font-bold text-white text-xs truncate">{node.name}</div>
-                    <div className="text-[11px] text-zinc-400 line-clamp-1">{node.role}</div>
-                  </div>
 
-                  <div className="mt-3 pt-2 border-t border-zinc-800/80 flex items-center justify-between text-[10px] text-zinc-400">
-                    <span>Latency:</span>
-                    <span className="font-semibold text-zinc-200">{node.latency}</span>
-                  </div>
+                    {index < nodes.length - 1 && (
+                      <div className="flex items-center justify-center shrink-0 text-zinc-600">
+                        <ArrowRight className="w-4 h-4 text-violet-400" />
+                      </div>
+                    )}
+                  </React.Fragment>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Selected Node Deep Inspector */}
+          <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-4 space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-zinc-800 gap-2">
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-white text-sm">{selectedNode.name}</span>
+                <span className="text-zinc-500">·</span>
+                <span className="text-violet-400 text-xs">{selectedNode.role}</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-zinc-400 text-xs">Observed Latency: <strong className="text-cyan-400">{selectedNode.latency}</strong></span>
+                {getStatusBadge(selectedNode.status)}
+              </div>
+            </div>
+
+            <p className="text-xs text-zinc-300 font-sans leading-relaxed">
+              {selectedNode.description}
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 font-mono text-xs">
+              <div className="p-3 rounded-lg bg-zinc-950/80 border border-zinc-800">
+                <div className="text-[10px] uppercase tracking-wider text-cyan-400 font-bold mb-1.5 flex items-center gap-1.5">
+                  <span>INPUT CONTRACT ARTIFACTS</span>
                 </div>
+                <ul className="space-y-1 text-zinc-300 text-[11px]">
+                  {selectedNode.inputs.map((inp, idx) => (
+                    <li key={idx} className="flex items-center gap-1.5">
+                      <span className="text-cyan-500">➔</span>
+                      <span>{inp}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
 
-                {index < nodes.length - 1 && (
-                  <div className="flex items-center justify-center shrink-0 text-zinc-600">
-                    <ArrowRight className="w-4 h-4 text-violet-400" />
-                  </div>
-                )}
-              </React.Fragment>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Selected Node Deep Inspector */}
-      <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-4 space-y-3">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-2 border-b border-zinc-800 gap-2">
-          <div className="flex items-center gap-2">
-            <span className="font-bold text-white text-sm">{selectedNode.name}</span>
-            <span className="text-zinc-500">·</span>
-            <span className="text-violet-400 text-xs">{selectedNode.role}</span>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="text-zinc-400 text-xs">Observed Latency: <strong className="text-cyan-400">{selectedNode.latency}</strong></span>
-            {getStatusBadge(selectedNode.status)}
-          </div>
-        </div>
-
-        <p className="text-xs text-zinc-300 font-sans leading-relaxed">
-          {selectedNode.description}
-        </p>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 font-mono text-xs">
-          <div className="p-3 rounded-lg bg-zinc-950/80 border border-zinc-800">
-            <div className="text-[10px] uppercase tracking-wider text-cyan-400 font-bold mb-1.5 flex items-center gap-1.5">
-              <span>INPUT CONTRACT ARTIFACTS</span>
+              <div className="p-3 rounded-lg bg-zinc-950/80 border border-zinc-800">
+                <div className="text-[10px] uppercase tracking-wider text-emerald-400 font-bold mb-1.5 flex items-center gap-1.5">
+                  <span>OUTPUT VERIFIED GUARANTEES</span>
+                </div>
+                <ul className="space-y-1 text-zinc-300 text-[11px]">
+                  {selectedNode.outputs.map((out, idx) => (
+                    <li key={idx} className="flex items-center gap-1.5">
+                      <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
+                      <span>{out}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
-            <ul className="space-y-1 text-zinc-300 text-[11px]">
-              {selectedNode.inputs.map((inp, idx) => (
-                <li key={idx} className="flex items-center gap-1.5">
-                  <span className="text-cyan-500">➔</span>
-                  <span>{inp}</span>
-                </li>
-              ))}
-            </ul>
           </div>
-
-          <div className="p-3 rounded-lg bg-zinc-950/80 border border-zinc-800">
-            <div className="text-[10px] uppercase tracking-wider text-emerald-400 font-bold mb-1.5 flex items-center gap-1.5">
-              <span>OUTPUT VERIFIED GUARANTEES</span>
-            </div>
-            <ul className="space-y-1 text-zinc-300 text-[11px]">
-              {selectedNode.outputs.map((out, idx) => (
-                <li key={idx} className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3 h-3 text-emerald-400 shrink-0" />
-                  <span>{out}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      </div>
+        </>
+      )}
     </div>
   );
 };

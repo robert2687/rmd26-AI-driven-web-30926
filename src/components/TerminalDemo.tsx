@@ -34,8 +34,20 @@ import {
   FileCode,
   FileText,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Network,
+  Zap,
+  Clock,
+  ArrowUpRight,
+  Radio,
+  Eye,
+  BookOpen,
+  SlidersHorizontal,
+  Box
 } from 'lucide-react';
+import heroAgenticCoreImg from '../assets/images/hero_agentic_core_1790742910137.jpg';
+import sandboxContainerCubeImg from '../assets/images/sandbox_container_cube_1790742921146.jpg';
+import securityComplianceShieldImg from '../assets/images/security_compliance_shield_1790742931407.jpg';
 import { INITIAL_TERMINAL_LOGS, SAMPLE_PROJECT_FILES, SIMULATION_PRESETS, COMPLIANCE_RULES } from '../data/mockData';
 import { ProjectFile, SimulationPreset, TerminalLog } from '../types';
 import { CryptoArbitrageApp } from './sandbox/CryptoArbitrageApp';
@@ -96,6 +108,64 @@ const TypedLogMessage: React.FC<TypedLogMessageProps> = ({
   );
 };
 
+interface PresetVisualMeta {
+  image?: string;
+  badgeText: string;
+  badgeColor: string;
+  gradient: string;
+  techTags: string[];
+  agents: string[];
+  latency: string;
+  categoryTag: string;
+  highlightColor: string;
+}
+
+const PRESET_VISUAL_META: Record<string, PresetVisualMeta> = {
+  'crypto-bot': {
+    badgeText: 'WebSockets · Order Book',
+    badgeColor: 'bg-amber-950/80 border-amber-500/50 text-amber-300',
+    gradient: 'from-amber-600/30 via-orange-600/20 to-zinc-950',
+    techTags: ['React 19', 'Wasm Micro-Kernel', 'OrderBook Engine', 'WebSockets'],
+    agents: ['Planner', 'Nexus Architect', 'Spark Coder', 'The Medic Patcher'],
+    latency: 'Sub-5ms DEX',
+    categoryTag: 'FinTech',
+    highlightColor: 'border-amber-500'
+  },
+  'saas-billing': {
+    image: sandboxContainerCubeImg,
+    badgeText: 'Stripe Webhooks · PDF Invoicing',
+    badgeColor: 'bg-blue-950/80 border-blue-500/50 text-blue-300',
+    gradient: 'from-blue-600/30 via-violet-600/20 to-zinc-950',
+    techTags: ['Stripe SDK', 'PDF Invoicing Wasm', 'Usage Sliders', 'FinOps'],
+    agents: ['Planner', 'Nexus Architect', 'Spark Coder', 'Auditor Sentinel'],
+    latency: '0% Telemetry Egress',
+    categoryTag: 'SaaS & Billing',
+    highlightColor: 'border-blue-500'
+  },
+  'eu-compliance': {
+    image: securityComplianceShieldImg,
+    badgeText: 'EU AI Act Article 14 · OWASP',
+    badgeColor: 'bg-emerald-950/80 border-emerald-500/50 text-emerald-300',
+    gradient: 'from-emerald-600/30 via-teal-600/20 to-zinc-950',
+    techTags: ['Article 14 Human Oversight', 'OWASP GenAI Top 10', 'CE Marking', 'Audit Logs'],
+    agents: ['Auditor Sentinel', 'Planner', 'Nexus Architect', 'The Medic Patcher'],
+    latency: 'Statutory Verified',
+    categoryTag: 'LegalTech',
+    highlightColor: 'border-emerald-500'
+  },
+  'slovak-copilot': {
+    image: heroAgenticCoreImg,
+    badgeText: 'Google Grounded · Fond SK-NIC',
+    badgeColor: 'bg-cyan-950/80 border-cyan-500/50 text-cyan-300',
+    gradient: 'from-violet-600/30 via-cyan-600/20 to-zinc-950',
+    techTags: ['Google Search Grounding', 'Gemini 3.8 Flash', 'Fuse.js Fuzzy', 'Footnote Citations'],
+    agents: ['Planner', 'Nexus Architect', 'Spark Coder', 'Google Grounding Engine'],
+    latency: 'Live Web Grounded',
+    categoryTag: 'Sovereign AI',
+    highlightColor: 'border-cyan-500'
+  }
+};
+
 export const TerminalDemo: React.FC = () => {
   // Main Navigation State
   const [activeTab, setActiveTab] = useState<TerminalTab>('sandbox');
@@ -128,6 +198,12 @@ export const TerminalDemo: React.FC = () => {
   // Interactive Self-Healing states
   const [selfHealPhase, setSelfHealPhase] = useState<'idle' | 'crash' | 'medic' | 'restored'>('idle');
   
+  // Launchpad Interactive States
+  const [launchpadFilter, setLaunchpadFilter] = useState<'all' | 'crypto-bot' | 'saas-billing' | 'eu-compliance' | 'slovak-copilot'>('all');
+  const [launchpadSearch, setLaunchpadSearch] = useState('');
+  const [expandedSpecId, setExpandedSpecId] = useState<string | null>(null);
+  const [quickScenarioInput, setQuickScenarioInput] = useState('');
+
   // Compliance Filter States
   const [complianceFilter, setComplianceFilter] = useState<'all' | 'EU AI Act' | 'OWASP GenAI' | 'GDPR / Sovereign AI'>('all');
   const [isAuditingRules, setIsAuditingRules] = useState(false);
@@ -140,7 +216,7 @@ export const TerminalDemo: React.FC = () => {
     { id: 'sandbox', label: 'Sandbox Output (Port 3000)', shortLabel: 'Sandbox', icon: Cpu },
     { id: 'architecture', label: 'Architecture & AST', shortLabel: 'AST & Code', icon: FolderTree },
     { id: 'chat', label: `Agent Stream (${terminalLogs.length})`, shortLabel: 'Live Stream', icon: Activity },
-    { id: 'dag', label: 'DAG State Engine', shortLabel: 'DAG Engine', icon: Layers },
+    { id: 'dag', label: 'Multi-Agent DAG & D3 Force Graph', shortLabel: 'D3 Graph & DAG', icon: Network },
     { id: 'cli', label: 'Wasm CLI Shell', shortLabel: 'Wasm CLI', icon: Terminal },
     { id: 'compliance', label: 'EU AI Act Audit', shortLabel: 'EU AI Audit', icon: ShieldCheck },
   ];
@@ -483,109 +559,330 @@ export const TerminalDemo: React.FC = () => {
           </p>
         </div>
 
-        {/* Mobile Compact Preset Selector (sm:hidden) */}
-        <div className="sm:hidden mb-6 space-y-3 font-mono">
-          <div className="flex items-center justify-between text-[11px] text-zinc-400 pb-1 border-b border-zinc-800">
-            <span>SELECT DEMO PRESET:</span>
-            <span className="text-cyan-400 font-bold">{selectedPreset.linesOfCode} LOC</span>
-          </div>
-          <div className="grid grid-cols-2 gap-1.5">
-            {SIMULATION_PRESETS.map((preset) => {
-              const isSelected = selectedPreset.id === preset.id;
-              return (
-                <button
-                  key={preset.id}
-                  onClick={() => setSelectedPreset(preset)}
-                  className={`p-2 rounded-xl text-left border text-xs transition-all ${
-                    isSelected
-                      ? 'bg-violet-950/80 border-violet-500 text-white font-bold ring-1 ring-violet-500/40'
-                      : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:text-white'
-                  }`}
-                >
-                  <div className="flex items-center gap-1.5 truncate">
-                    {preset.id === 'crypto-bot' && <span>🪙</span>}
-                    {preset.id === 'saas-billing' && <span>💳</span>}
-                    {preset.id === 'eu-compliance' && <span>🇪🇺</span>}
-                    {preset.id === 'slovak-copilot' && <span>🇸🇰</span>}
-                    <span className="truncate">{preset.title.split(' ')[0]}</span>
-                  </div>
-                </button>
-              );
-            })}
+        {/* Interactive Launchpad Top Control Strip & Telemetry */}
+        <div className="mb-6 space-y-4 font-mono">
+          {/* Live System Telemetry Strip */}
+          <div className="p-3 rounded-2xl bg-zinc-900/80 border border-zinc-800/90 flex flex-wrap items-center justify-between gap-3 text-xs">
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-zinc-950 border border-zinc-800 text-zinc-300">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="text-zinc-400">WebContainers Engine:</span>
+                <span className="text-emerald-400 font-bold">Sub-5ms Wasm Micro-Kernel</span>
+              </div>
+              <div className="hidden md:flex items-center gap-2 px-2.5 py-1 rounded-lg bg-zinc-950 border border-zinc-800 text-zinc-300">
+                <ShieldCheck className="w-3.5 h-3.5 text-cyan-400" />
+                <span className="text-zinc-400">Article 14 Self-Healing:</span>
+                <span className="text-cyan-400 font-bold">Closed-Loop Patcher Armed</span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 text-zinc-400 text-[11px]">
+              <span>Active Target:</span>
+              <span className="px-2 py-0.5 rounded bg-violet-950 border border-violet-500/50 text-violet-300 font-bold">
+                {selectedPreset.title.split(' ')[0]} ({selectedPreset.linesOfCode} LOC)
+              </span>
+            </div>
           </div>
 
-          {/* Active Preset Summary Card on Mobile */}
-          <div className="p-3.5 rounded-xl bg-zinc-900/60 border border-zinc-800 flex items-center justify-between gap-3">
-            <div className="min-w-0 flex-1">
-              <div className="text-xs font-bold text-white truncate">{selectedPreset.title}</div>
-              <div className="text-[10px] text-zinc-400 font-sans line-clamp-1">{selectedPreset.description}</div>
+          {/* Category Filter Pills & Search Input Bar */}
+          <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+            {/* Filter Pills */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none text-xs">
+              {(
+                [
+                  { id: 'all', label: 'All Sandboxes', count: 4, icon: '⚡' },
+                  { id: 'crypto-bot', label: 'FinTech', count: 1, icon: '🪙' },
+                  { id: 'saas-billing', label: 'SaaS & Billing', count: 1, icon: '💳' },
+                  { id: 'eu-compliance', label: 'EU AI Act', count: 1, icon: '🇪🇺' },
+                  { id: 'slovak-copilot', label: 'Slovak GovTech', count: 1, icon: '🇸🇰' }
+                ] as const
+              ).map((tab) => {
+                const isActive = launchpadFilter === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setLaunchpadFilter(tab.id)}
+                    className={`px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap border ${
+                      isActive
+                        ? 'bg-gradient-to-r from-violet-600 to-cyan-600 text-white border-cyan-400/50 shadow-md shadow-violet-950/40'
+                        : 'bg-zinc-900/60 hover:bg-zinc-850 border-zinc-800 text-zinc-400 hover:text-white'
+                    }`}
+                  >
+                    <span>{tab.icon}</span>
+                    <span>{tab.label}</span>
+                    <span
+                      className={`text-[10px] px-1.5 py-0.2 rounded-full ${
+                        isActive ? 'bg-black/40 text-cyan-200' : 'bg-zinc-800 text-zinc-400'
+                      }`}
+                    >
+                      {tab.count}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
-            <button
-              onClick={() => handleLaunchSandboxPreset(selectedPreset)}
-              className="px-3 py-1.5 rounded-lg text-xs font-bold bg-cyan-500 text-zinc-950 flex items-center gap-1 shrink-0 shadow-md shadow-cyan-950/40"
-            >
-              <Terminal className="w-3 h-3" />
-              <span>Try Sandbox</span>
-            </button>
+
+            {/* Quick Search Input */}
+            <div className="flex items-center gap-2 bg-zinc-900/90 border border-zinc-800 rounded-xl px-3 py-1.5 text-xs text-zinc-200 w-full md:w-72 focus-within:border-cyan-500/70 focus-within:ring-1 focus-within:ring-cyan-500/30 transition-all">
+              <Search className="w-3.5 h-3.5 text-zinc-500 shrink-0" />
+              <input
+                type="text"
+                value={launchpadSearch}
+                onChange={(e) => setLaunchpadSearch(e.target.value)}
+                placeholder="Search presets, tech, or frameworks..."
+                className="bg-transparent outline-none flex-1 placeholder:text-zinc-500 font-sans text-xs"
+              />
+              {launchpadSearch && (
+                <button
+                  onClick={() => setLaunchpadSearch('')}
+                  className="text-zinc-500 hover:text-white text-xs cursor-pointer"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Quick Scenario Launch Chips Bar */}
+          <div className="p-3 rounded-xl bg-zinc-950/60 border border-zinc-800/80 space-y-2">
+            <div className="flex items-center justify-between text-[11px] text-zinc-400">
+              <span className="flex items-center gap-1.5 text-zinc-300 font-bold">
+                <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                <span>ONE-CLICK SCENARIO LAUNCHER:</span>
+              </span>
+              <span className="text-[10px] text-zinc-500">Auto-mounts sandbox & triggers multi-agent stream</span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-1.5 text-xs">
+              {[
+                {
+                  label: '🇸🇰 Fond SK-NIC 2026 Grants',
+                  hint: 'Google Search Grounding & Fuse.js',
+                  presetId: 'slovak-copilot',
+                  prompt: 'Vyhľadať výzvy Fondu SK-NIC pre rok 2026 s overením cez Google Search'
+                },
+                {
+                  label: '🇪🇺 EU AI Act Article 14 Auditor',
+                  hint: 'Human Oversight & OWASP Scan',
+                  presetId: 'eu-compliance',
+                  prompt: 'Spustiť compliance audit modelu pre Article 14 Human Oversight'
+                },
+                {
+                  label: '🪙 High-Frequency DEX Arbitrage',
+                  hint: 'Sub-5ms OrderBook & WebSockets',
+                  presetId: 'crypto-bot',
+                  prompt: 'Spustiť monitorovanie spreadov medzi Uniswap v3 a Binance s latenciou <5ms'
+                },
+                {
+                  label: '💳 Enterprise Stripe Invoicing',
+                  hint: 'Metered Billing & PDF Generator',
+                  presetId: 'saas-billing',
+                  prompt: 'Nakonfigurovať metered billing s webhookmi a generovaním PDF faktúr'
+                }
+              ].map((sc, scIdx) => (
+                <button
+                  key={scIdx}
+                  onClick={() => {
+                    const target = SIMULATION_PRESETS.find((p) => p.id === sc.presetId);
+                    if (target) {
+                      setSelectedPreset(target);
+                      setActiveTab('sandbox');
+                      handleRunSwarm(target);
+                    }
+                  }}
+                  className="p-2 rounded-lg bg-zinc-900/80 hover:bg-zinc-850 border border-zinc-800 hover:border-cyan-500/60 text-left transition-all group flex flex-col justify-between cursor-pointer"
+                >
+                  <div className="font-bold text-white group-hover:text-cyan-300 transition-colors flex items-center justify-between text-xs">
+                    <span className="truncate">{sc.label}</span>
+                    <ArrowUpRight className="w-3 h-3 text-zinc-500 group-hover:text-cyan-400 shrink-0 group-hover:translate-x-0.5 transition-transform" />
+                  </div>
+                  <div className="text-[10px] text-zinc-400 font-sans truncate mt-0.5">{sc.hint}</div>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
-        {/* Centralized 4-App Sandbox Launchpad Cards (Desktop & Tablet) */}
-        <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 font-mono">
-          {SIMULATION_PRESETS.map((preset) => {
+        {/* Enhanced Interactive Preset Cards Grid (Desktop, Tablet & Mobile) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 font-mono">
+          {SIMULATION_PRESETS.filter((p) => {
+            if (launchpadFilter !== 'all' && p.id !== launchpadFilter) return false;
+            if (!launchpadSearch.trim()) return true;
+            const q = launchpadSearch.toLowerCase();
+            const meta = PRESET_VISUAL_META[p.id];
+            return (
+              p.title.toLowerCase().includes(q) ||
+              p.description.toLowerCase().includes(q) ||
+              p.category.toLowerCase().includes(q) ||
+              meta?.techTags.some((t) => t.toLowerCase().includes(q))
+            );
+          }).map((preset) => {
             const isSelected = selectedPreset.id === preset.id;
+            const isLiveInSandbox = isSelected && activeTab === 'sandbox';
+            const meta = PRESET_VISUAL_META[preset.id];
+            const isSpecExpanded = expandedSpecId === preset.id;
+
             return (
               <div
                 key={preset.id}
                 onClick={() => setSelectedPreset(preset)}
-                className={`cursor-pointer rounded-2xl p-4 border transition-all duration-300 flex flex-col justify-between backdrop-blur-xl ${
+                className={`group cursor-pointer rounded-2xl border transition-all duration-300 flex flex-col justify-between backdrop-blur-xl overflow-hidden ${
                   isSelected
-                    ? 'bg-gradient-to-b from-zinc-900/90 via-violet-950/20 to-zinc-900/90 border-violet-500 shadow-xl shadow-violet-950/30 ring-1 ring-violet-500/40'
-                    : 'bg-zinc-900/40 border-zinc-800/80 hover:border-zinc-700 hover:bg-zinc-900/70'
+                    ? 'bg-gradient-to-b from-zinc-900/95 via-violet-950/25 to-zinc-900/95 border-violet-500 shadow-2xl shadow-violet-950/40 ring-1 ring-violet-500/50'
+                    : 'bg-zinc-900/40 border-zinc-800/80 hover:border-zinc-700 hover:bg-zinc-900/70 hover:shadow-xl'
                 }`}
               >
                 <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-[10px] text-zinc-500 uppercase tracking-wider">
-                      {preset.category}
-                    </span>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-zinc-950 border border-zinc-800 text-cyan-400 font-semibold">
-                      {preset.linesOfCode} LOC
-                    </span>
+                  {/* Visual Header Image or High-Tech Banner */}
+                  <div className="relative h-28 w-full bg-zinc-950 overflow-hidden border-b border-zinc-800/80">
+                    {meta?.image ? (
+                      <img
+                        src={meta.image}
+                        alt={preset.title}
+                        className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-500"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-amber-950/60 via-zinc-900 to-zinc-950 flex flex-col items-center justify-center p-3 relative">
+                        <div className="absolute inset-0 bg-[radial-gradient(#f59e0b_1px,transparent_1px)] [background-size:16px_16px] opacity-20" />
+                        <span className="text-3xl mb-1">🪙</span>
+                        <div className="flex items-center gap-1.5 text-[10px] text-amber-300 font-bold bg-black/60 px-2 py-0.5 rounded-full border border-amber-500/40">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping" />
+                          <span>DEX Arbitrage Engine</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Gradient Overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-transparent" />
+
+                    {/* Top Status & Category Badges */}
+                    <div className="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between gap-1.5">
+                      <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-zinc-950/90 border border-zinc-800 text-zinc-300 backdrop-blur-md uppercase tracking-wider">
+                        {meta?.categoryTag || preset.category}
+                      </span>
+
+                      {isLiveInSandbox ? (
+                        <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-emerald-950/90 border border-emerald-500/60 text-emerald-300 flex items-center gap-1 shadow-md">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                          <span>Active Sandbox</span>
+                        </span>
+                      ) : (
+                        <span className="text-[9px] font-bold px-2 py-0.5 rounded-md bg-zinc-950/80 border border-zinc-800 text-cyan-400">
+                          {preset.linesOfCode} LOC
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Bottom Floating Feature Pill on Image */}
+                    <div className="absolute bottom-2 left-2.5 right-2.5">
+                      <span
+                        className={`text-[9px] font-bold px-2 py-0.5 rounded-md border flex items-center gap-1 backdrop-blur-md w-fit ${meta?.badgeColor}`}
+                      >
+                        <Zap className="w-2.5 h-2.5" />
+                        <span>{meta?.badgeText}</span>
+                      </span>
+                    </div>
                   </div>
 
-                  <h3 className="text-sm font-bold text-white mb-1.5 flex items-center gap-1.5">
-                    {preset.id === 'crypto-bot' && <span>🪙</span>}
-                    {preset.id === 'saas-billing' && <span>💳</span>}
-                    {preset.id === 'eu-compliance' && <span>🇪🇺</span>}
-                    {preset.id === 'slovak-copilot' && <span>🇸🇰</span>}
-                    <span>{preset.title}</span>
-                  </h3>
+                  {/* Body Information */}
+                  <div className="p-4 space-y-3">
+                    <div>
+                      <h3 className="text-sm font-bold text-white flex items-center gap-1.5 group-hover:text-cyan-300 transition-colors">
+                        {preset.id === 'crypto-bot' && <span>🪙</span>}
+                        {preset.id === 'saas-billing' && <span>💳</span>}
+                        {preset.id === 'eu-compliance' && <span>🇪🇺</span>}
+                        {preset.id === 'slovak-copilot' && <span>🇸🇰</span>}
+                        <span>{preset.title}</span>
+                      </h3>
 
-                  <p className="text-[11px] text-zinc-400 font-sans line-clamp-2 leading-relaxed mb-4">
-                    {preset.description}
-                  </p>
+                      <p className="text-[11px] text-zinc-400 font-sans line-clamp-2 leading-relaxed mt-1">
+                        {preset.description}
+                      </p>
+                    </div>
+
+                    {/* Tech Stack Chips */}
+                    <div className="flex flex-wrap gap-1">
+                      {meta?.techTags.slice(0, 3).map((tag, tIdx) => (
+                        <span
+                          key={tIdx}
+                          className="px-1.5 py-0.5 rounded bg-zinc-950/80 border border-zinc-800/80 text-[9px] text-zinc-400"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+
+                    {/* Expandable DAG Agents & Error Recovery Telemetry Accordion */}
+                    {isSpecExpanded && (
+                      <div className="p-2.5 rounded-xl bg-zinc-950/90 border border-zinc-800/90 space-y-2 text-[10px] animate-in fade-in duration-200">
+                        <div className="flex items-center justify-between text-zinc-400 border-b border-zinc-800/60 pb-1">
+                          <span className="font-bold text-zinc-300">Orchestrator Swarm:</span>
+                          <span className="text-cyan-400">{meta?.latency}</span>
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          {meta?.agents.map((ag, aIdx) => (
+                            <span
+                              key={aIdx}
+                              className="px-1.5 py-0.2 rounded bg-violet-950/60 border border-violet-700/40 text-violet-300"
+                            >
+                              {ag}
+                            </span>
+                          ))}
+                        </div>
+                        {preset.initialError && (
+                          <div className="text-amber-400/90 pt-1 font-sans text-[10px]">
+                            <span className="font-bold font-mono">Self-Heal: </span>
+                            {preset.patchSolution}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
-                <div className="pt-3 border-t border-zinc-800/80 flex items-center justify-between gap-2">
-                  <span className="text-[10px] text-zinc-500">
-                    {preset.selfHealCount > 0 ? 'Self-Healing: Yes' : 'Self-Healing: Idle'}
-                  </span>
+                {/* Card Footer Actions */}
+                <div className="p-4 pt-0">
+                  <div className="pt-3 border-t border-zinc-800/80 flex items-center justify-between gap-2">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setExpandedSpecId(isSpecExpanded ? null : preset.id);
+                      }}
+                      className="text-[10px] text-zinc-500 hover:text-cyan-400 transition-colors flex items-center gap-1 cursor-pointer"
+                      title="Inspect DAG agent topology and self-heal telemetry"
+                    >
+                      <span>{isSpecExpanded ? 'Less ▴' : 'Specs ▾'}</span>
+                    </button>
 
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleLaunchSandboxPreset(preset);
-                    }}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
-                      isSelected && activeTab === 'sandbox'
-                        ? 'bg-cyan-500 hover:bg-cyan-400 text-zinc-950 shadow-md shadow-cyan-950/40'
-                        : 'bg-violet-600/90 hover:bg-violet-500 text-white'
-                    }`}
-                  >
-                    <Terminal className="w-3 h-3" />
-                    <span>Try Sandbox</span>
-                  </button>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedPreset(preset);
+                          setActiveTab('architecture');
+                        }}
+                        title="View Architecture & AST code"
+                        className="p-1.5 rounded-lg bg-zinc-950 hover:bg-zinc-800 border border-zinc-800 text-zinc-400 hover:text-white transition-colors cursor-pointer text-xs"
+                      >
+                        <Code2 className="w-3.5 h-3.5" />
+                      </button>
+
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleLaunchSandboxPreset(preset);
+                        }}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm cursor-pointer ${
+                          isLiveInSandbox
+                            ? 'bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-extrabold shadow-emerald-950/40'
+                            : 'bg-gradient-to-r from-violet-600 to-cyan-600 hover:from-violet-500 hover:to-cyan-500 text-white'
+                        }`}
+                      >
+                        <Terminal className="w-3 h-3" />
+                        <span>{isLiveInSandbox ? 'In Sandbox' : 'Try Sandbox'}</span>
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             );
@@ -627,6 +924,17 @@ export const TerminalDemo: React.FC = () => {
               >
                 <Terminal className="w-3.5 h-3.5 text-cyan-400" />
                 <span>Try Sandbox</span>
+              </button>
+            )}
+
+            {activeTab !== 'dag' && (
+              <button
+                onClick={() => setActiveTab('dag')}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-violet-950/70 border border-violet-500/50 text-violet-300 hover:bg-violet-900/60 transition-colors shadow-sm cursor-pointer"
+                title="Visualize real-time D3.js force-directed agent orchestration graph"
+              >
+                <Network className="w-3.5 h-3.5 text-violet-400" />
+                <span>D3 Graph</span>
               </button>
             )}
 
