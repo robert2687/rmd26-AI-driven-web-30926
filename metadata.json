@@ -1,0 +1,7 @@
+{
+  "name": "Sovereign Architect // Agentic Studio Pro",
+  "description": "Next-generation autonomous AI software engineering platform with closed-loop self-healing, multi-agent orchestration, and isolated browser-native WebContainers sandbox.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
