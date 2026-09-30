@@ -32,7 +32,9 @@ import {
   Bug,
   Trash2,
   FileCode,
-  FileText
+  FileText,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { INITIAL_TERMINAL_LOGS, SAMPLE_PROJECT_FILES, SIMULATION_PRESETS, COMPLIANCE_RULES } from '../data/mockData';
 import { ProjectFile, SimulationPreset, TerminalLog } from '../types';
@@ -130,6 +132,40 @@ export const TerminalDemo: React.FC = () => {
   const [complianceFilter, setComplianceFilter] = useState<'all' | 'EU AI Act' | 'OWASP GenAI' | 'GDPR / Sovereign AI'>('all');
   const [isAuditingRules, setIsAuditingRules] = useState(false);
   const [auditSuccessMsg, setAuditSuccessMsg] = useState<string | null>(null);
+
+  // Mobile Architecture View State
+  const [mobileArchTab, setMobileArchTab] = useState<'files' | 'code'>('code');
+
+  const studioTabs: { id: TerminalTab; label: string; shortLabel: string; icon: React.FC<{ className?: string }> }[] = [
+    { id: 'sandbox', label: 'Sandbox Output (Port 3000)', shortLabel: 'Sandbox', icon: Cpu },
+    { id: 'architecture', label: 'Architecture & AST', shortLabel: 'AST & Code', icon: FolderTree },
+    { id: 'chat', label: `Agent Stream (${terminalLogs.length})`, shortLabel: 'Live Stream', icon: Activity },
+    { id: 'dag', label: 'DAG State Engine', shortLabel: 'DAG Engine', icon: Layers },
+    { id: 'cli', label: 'Wasm CLI Shell', shortLabel: 'Wasm CLI', icon: Terminal },
+    { id: 'compliance', label: 'EU AI Act Audit', shortLabel: 'EU AI Audit', icon: ShieldCheck },
+  ];
+
+  const currentTabIndex = studioTabs.findIndex((t) => t.id === activeTab);
+  const handlePrevTab = () => {
+    const prevIdx = (currentTabIndex - 1 + studioTabs.length) % studioTabs.length;
+    setActiveTab(studioTabs[prevIdx].id);
+  };
+  const handleNextTab = () => {
+    const nextIdx = (currentTabIndex + 1) % studioTabs.length;
+    setActiveTab(studioTabs[nextIdx].id);
+  };
+
+  // Listen for external tab switches from Header or Hero
+  useEffect(() => {
+    const handleSwitchTab = (e: Event) => {
+      const customEvent = e as CustomEvent<TerminalTab>;
+      if (customEvent.detail) {
+        setActiveTab(customEvent.detail);
+      }
+    };
+    window.addEventListener('switch-terminal-tab', handleSwitchTab);
+    return () => window.removeEventListener('switch-terminal-tab', handleSwitchTab);
+  }, []);
 
   const logsEndRef = useRef<HTMLDivElement>(null);
   const queueRef = useRef<TerminalLog[]>([]);
@@ -417,8 +453,55 @@ export const TerminalDemo: React.FC = () => {
           </p>
         </div>
 
-        {/* Centralized 4-App Sandbox Launchpad Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 font-mono">
+        {/* Mobile Compact Preset Selector (sm:hidden) */}
+        <div className="sm:hidden mb-6 space-y-3 font-mono">
+          <div className="flex items-center justify-between text-[11px] text-zinc-400 pb-1 border-b border-zinc-800">
+            <span>SELECT DEMO PRESET:</span>
+            <span className="text-cyan-400 font-bold">{selectedPreset.linesOfCode} LOC</span>
+          </div>
+          <div className="grid grid-cols-2 gap-1.5">
+            {SIMULATION_PRESETS.map((preset) => {
+              const isSelected = selectedPreset.id === preset.id;
+              return (
+                <button
+                  key={preset.id}
+                  onClick={() => setSelectedPreset(preset)}
+                  className={`p-2 rounded-xl text-left border text-xs transition-all ${
+                    isSelected
+                      ? 'bg-violet-950/80 border-violet-500 text-white font-bold ring-1 ring-violet-500/40'
+                      : 'bg-zinc-900/60 border-zinc-800 text-zinc-400 hover:text-white'
+                  }`}
+                >
+                  <div className="flex items-center gap-1.5 truncate">
+                    {preset.id === 'crypto-bot' && <span>🪙</span>}
+                    {preset.id === 'saas-billing' && <span>💳</span>}
+                    {preset.id === 'eu-compliance' && <span>🇪🇺</span>}
+                    {preset.id === 'slovak-copilot' && <span>🇸🇰</span>}
+                    <span className="truncate">{preset.title.split(' ')[0]}</span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Active Preset Summary Card on Mobile */}
+          <div className="p-3.5 rounded-xl bg-zinc-900/60 border border-zinc-800 flex items-center justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <div className="text-xs font-bold text-white truncate">{selectedPreset.title}</div>
+              <div className="text-[10px] text-zinc-400 font-sans line-clamp-1">{selectedPreset.description}</div>
+            </div>
+            <button
+              onClick={() => handleLaunchSandboxPreset(selectedPreset)}
+              className="px-3 py-1.5 rounded-lg text-xs font-bold bg-cyan-500 text-zinc-950 flex items-center gap-1 shrink-0 shadow-md shadow-cyan-950/40"
+            >
+              <Terminal className="w-3 h-3" />
+              <span>Try Sandbox</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Centralized 4-App Sandbox Launchpad Cards (Desktop & Tablet) */}
+        <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 font-mono">
           {SIMULATION_PRESETS.map((preset) => {
             const isSelected = selectedPreset.id === preset.id;
             return (
@@ -488,13 +571,13 @@ export const TerminalDemo: React.FC = () => {
               <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
             </div>
 
-            <div className="hidden sm:flex items-center gap-1.5 text-zinc-400">
-              <span>Speed:</span>
+            <div className="flex items-center gap-1 text-zinc-400 text-[10px]">
+              <span className="hidden xs:inline">Speed:</span>
               {(['0.5x', '1x', '3x', 'instant'] as const).map((spd) => (
                 <button
                   key={spd}
                   onClick={() => setSpeedMultiplier(spd)}
-                  className={`px-2 py-0.5 rounded text-[11px] transition-colors ${
+                  className={`px-2 py-0.5 rounded transition-colors ${
                     speedMultiplier === spd
                       ? 'bg-violet-600 text-white font-bold'
                       : 'bg-zinc-950 text-zinc-400 hover:text-zinc-200 border border-zinc-800'
@@ -552,7 +635,7 @@ export const TerminalDemo: React.FC = () => {
               className="flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-xs font-semibold bg-gradient-to-r from-violet-600 to-cyan-500 hover:from-violet-500 hover:to-cyan-400 text-white shadow-md shadow-violet-950/40 transition-all disabled:opacity-50"
             >
               {isSimulating ? <RotateCcw className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5" />}
-              <span>{isSimulating ? 'Executing Swarm...' : 'Run Swarm'}</span>
+              <span>{isSimulating ? 'Executing...' : 'Run Swarm'}</span>
             </button>
 
             <button
@@ -568,84 +651,90 @@ export const TerminalDemo: React.FC = () => {
         {/* Studio Shell Window */}
         <div className="w-full rounded-2xl border border-zinc-800/90 bg-zinc-900/60 backdrop-blur-2xl shadow-2xl shadow-black/80 overflow-hidden font-mono">
           {/* Main Top Navigation Tabs */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-zinc-800 bg-zinc-950/80 px-3 sm:px-4 py-2.5 gap-3 w-full">
-            <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 scrollbar-none">
-              <button
-                onClick={() => setActiveTab('sandbox')}
-                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all shrink-0 ${
-                  activeTab === 'sandbox'
-                    ? 'bg-zinc-800 text-cyan-300 border border-cyan-500/40 shadow-sm font-bold'
-                    : 'text-zinc-400 hover:text-zinc-200'
-                }`}
-              >
-                <Cpu className="w-3.5 h-3.5 text-cyan-400" />
-                <span>Sandbox Output (Port 3000)</span>
-              </button>
+          <div className="border-b border-zinc-800 bg-zinc-950/90 px-3 sm:px-4 py-2.5 w-full">
+            {/* Mobile Feature Selector (Visible on small screens so users see ALL 6 features!) */}
+            <div className="sm:hidden w-full space-y-2.5">
+              <div className="flex items-center justify-between text-[11px] text-zinc-400 pb-1 border-b border-zinc-800/80">
+                <span className="flex items-center gap-1.5 text-zinc-300 font-bold">
+                  <Sparkles className="w-3 h-3 text-cyan-400" />
+                  <span>ALL 6 STUDIO FEATURES:</span>
+                </span>
+                <span className="text-[10px] text-cyan-400 font-mono font-bold">
+                  {currentTabIndex + 1} of 6
+                </span>
+              </div>
 
-              <button
-                onClick={() => setActiveTab('architecture')}
-                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all shrink-0 ${
-                  activeTab === 'architecture'
-                    ? 'bg-zinc-800 text-violet-300 border border-violet-500/40 shadow-sm font-bold'
-                    : 'text-zinc-400 hover:text-zinc-200'
-                }`}
-              >
-                <FolderTree className="w-3.5 h-3.5 text-violet-400" />
-                <span>Architecture &amp; AST</span>
-              </button>
+              {/* 3x2 Grid of All 6 Features */}
+              <div className="grid grid-cols-3 gap-1.5">
+                {studioTabs.map((tab) => {
+                  const isActive = activeTab === tab.id;
+                  const Icon = tab.icon;
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`p-2 rounded-xl text-[10px] font-bold flex flex-col items-center justify-center gap-1 transition-all border ${
+                        isActive
+                          ? 'bg-gradient-to-b from-zinc-800 to-zinc-900 border-cyan-500 text-white shadow-md shadow-cyan-950/40 ring-1 ring-cyan-500/50'
+                          : 'bg-zinc-900/60 border-zinc-800/80 text-zinc-400 hover:text-zinc-200'
+                      }`}
+                    >
+                      <Icon className={`w-4 h-4 ${isActive ? 'text-cyan-400' : 'text-zinc-500'}`} />
+                      <span className="truncate max-w-full text-center">{tab.shortLabel}</span>
+                    </button>
+                  );
+                })}
+              </div>
 
-              <button
-                onClick={() => setActiveTab('chat')}
-                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all shrink-0 ${
-                  activeTab === 'chat'
-                    ? 'bg-zinc-800 text-white border border-zinc-700 shadow-sm font-bold'
-                    : 'text-zinc-400 hover:text-zinc-200'
-                }`}
-              >
-                <Activity className="w-3.5 h-3.5 text-amber-400" />
-                <span>Multi-Agent Stream ({terminalLogs.length})</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab('dag')}
-                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all shrink-0 ${
-                  activeTab === 'dag'
-                    ? 'bg-zinc-800 text-indigo-300 border border-indigo-500/40 shadow-sm font-bold'
-                    : 'text-zinc-400 hover:text-zinc-200'
-                }`}
-              >
-                <Layers className="w-3.5 h-3.5 text-indigo-400" />
-                <span>DAG State Engine</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab('cli')}
-                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all shrink-0 ${
-                  activeTab === 'cli'
-                    ? 'bg-zinc-800 text-cyan-300 border border-cyan-500/40 shadow-sm font-bold'
-                    : 'text-zinc-400 hover:text-zinc-200'
-                }`}
-              >
-                <Terminal className="w-3.5 h-3.5 text-cyan-400" />
-                <span>Wasm CLI Shell</span>
-              </button>
-
-              <button
-                onClick={() => setActiveTab('compliance')}
-                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all shrink-0 ${
-                  activeTab === 'compliance'
-                    ? 'bg-zinc-800 text-emerald-300 border border-emerald-500/40 shadow-sm font-bold'
-                    : 'text-zinc-400 hover:text-zinc-200'
-                }`}
-              >
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                <span>EU AI Act Audit</span>
-              </button>
+              {/* Mobile Prev / Next Feature Navigator Bar */}
+              <div className="flex items-center justify-between pt-1 text-[11px] bg-zinc-900/60 p-1.5 rounded-xl border border-zinc-800">
+                <button
+                  onClick={handlePrevTab}
+                  className="px-2.5 py-1 rounded-lg bg-zinc-950 border border-zinc-800 text-zinc-300 hover:text-white flex items-center gap-1 text-[10px]"
+                >
+                  <ChevronLeft className="w-3 h-3" />
+                  <span>Prev</span>
+                </button>
+                <span className="text-cyan-300 font-bold truncate px-2 text-[10px] text-center">
+                  {studioTabs[currentTabIndex]?.label}
+                </span>
+                <button
+                  onClick={handleNextTab}
+                  className="px-2.5 py-1 rounded-lg bg-zinc-950 border border-zinc-800 text-zinc-300 hover:text-white flex items-center gap-1 text-[10px]"
+                >
+                  <span>Next</span>
+                  <ChevronRight className="w-3 h-3" />
+                </button>
+              </div>
             </div>
 
-            <div className="flex items-center gap-2 text-[11px] text-zinc-500 ml-auto">
-              <span>Cluster:</span>
-              <span className="text-emerald-400 font-semibold">WebContainers Online</span>
+            {/* Desktop / Tablet Horizontal Tab Bar */}
+            <div className="hidden sm:flex items-center justify-between gap-3 w-full">
+              <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0 scrollbar-none">
+                {studioTabs.map((tab) => {
+                  const isActive = activeTab === tab.id;
+                  const Icon = tab.icon;
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all shrink-0 ${
+                        isActive
+                          ? 'bg-zinc-800 text-cyan-300 border border-cyan-500/40 shadow-sm font-bold'
+                          : 'text-zinc-400 hover:text-zinc-200'
+                      }`}
+                    >
+                      <Icon className="w-3.5 h-3.5 text-cyan-400" />
+                      <span>{tab.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="flex items-center gap-2 text-[11px] text-zinc-500 ml-auto shrink-0">
+                <span>Cluster:</span>
+                <span className="text-emerald-400 font-semibold">WebContainers Online</span>
+              </div>
             </div>
           </div>
 
@@ -815,67 +904,102 @@ export const TerminalDemo: React.FC = () => {
 
           {/* TAB 2: ARCHITECTURE & AST EXPLORER WITH CODE/AST TOGGLE */}
           {activeTab === 'architecture' && (
-            <div className="grid grid-cols-1 lg:grid-cols-12 min-h-[520px] divide-y lg:divide-y-0 lg:divide-x divide-zinc-800">
-              {/* Virtual File System Explorer */}
-              <div className="lg:col-span-4 p-4 bg-zinc-950/90 text-xs flex flex-col justify-between">
-                <div>
-                  <div className="text-zinc-400 font-semibold mb-3 px-2 flex items-center justify-between">
-                    <span>WORKSPACE EXPLORER</span>
-                    <span className="text-[10px] text-cyan-400 font-bold">VFS MOUNTED</span>
-                  </div>
-
-                  {/* File Search */}
-                  <div className="relative mb-3">
-                    <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-zinc-500" />
-                    <input
-                      type="text"
-                      value={fileSearchQuery}
-                      onChange={(e) => setFileSearchQuery(e.target.value)}
-                      placeholder="Search files..."
-                      className="w-full bg-zinc-900 border border-zinc-800 rounded-lg pl-8 pr-3 py-1.5 text-xs text-zinc-200 outline-none focus:border-violet-500"
-                    />
-                  </div>
-
-                  <div className="space-y-1">
-                    {filteredFiles.map((file) => (
-                      <button
-                        key={file.path}
-                        onClick={() => setSelectedFile(file)}
-                        className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-left transition-colors ${
-                          selectedFile.path === file.path
-                            ? 'bg-violet-950/50 border border-violet-500/40 text-white font-medium'
-                            : 'text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200'
-                        }`}
-                      >
-                        <span className="flex items-center gap-2 truncate">
-                          {file.language === 'json' ? (
-                            <FileCode className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                          ) : file.language === 'python' ? (
-                            <FileText className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                          ) : (
-                            <Code2 className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                          )}
-                          <span className="truncate">{file.name}</span>
-                        </span>
-                        <span className="text-[10px] text-zinc-500 uppercase">{file.language}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="mt-6 p-3 rounded-xl bg-zinc-900/60 border border-zinc-800 text-[11px] text-zinc-400 space-y-1.5">
-                  <div className="font-semibold text-zinc-300 flex items-center gap-1.5">
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>AST Contract Invariant:</span>
-                  </div>
-                  <p className="font-sans text-xs">
-                    All components are bound to <strong className="text-zinc-200">mockData.ts</strong> and <strong className="text-zinc-200">theme.json</strong>. Zero placeholder omissions allowed.
-                  </p>
+            <div className="flex flex-col min-h-[520px]">
+              {/* Mobile View Toggle between Files and Code (lg:hidden) */}
+              <div className="lg:hidden p-2.5 bg-zinc-950 border-b border-zinc-800 flex items-center justify-between gap-2">
+                <span className="text-[10px] text-zinc-400 font-bold uppercase">View:</span>
+                <div className="flex items-center gap-1 bg-zinc-900 border border-zinc-800 rounded-lg p-0.5 text-xs">
+                  <button
+                    onClick={() => setMobileArchTab('files')}
+                    className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${
+                      mobileArchTab === 'files'
+                        ? 'bg-violet-600 text-white shadow-sm'
+                        : 'text-zinc-400 hover:text-white'
+                    }`}
+                  >
+                    📁 Files ({filteredFiles.length})
+                  </button>
+                  <button
+                    onClick={() => setMobileArchTab('code')}
+                    className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${
+                      mobileArchTab === 'code'
+                        ? 'bg-violet-600 text-white shadow-sm'
+                        : 'text-zinc-400 hover:text-white'
+                    }`}
+                  >
+                    📝 Code ({selectedFile.name})
+                  </button>
                 </div>
               </div>
 
-              {/* Code / AST Viewer Panel */}
-              <div className="lg:col-span-8 p-4 bg-zinc-950 flex flex-col justify-between">
+              <div className="grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-zinc-800 flex-1">
+                {/* Virtual File System Explorer */}
+                <div className={`lg:col-span-4 p-4 bg-zinc-950/90 text-xs flex flex-col justify-between ${
+                  mobileArchTab === 'files' ? 'block' : 'hidden lg:flex'
+                }`}>
+                  <div>
+                    <div className="text-zinc-400 font-semibold mb-3 px-2 flex items-center justify-between">
+                      <span>WORKSPACE EXPLORER</span>
+                      <span className="text-[10px] text-cyan-400 font-bold">VFS MOUNTED</span>
+                    </div>
+
+                    {/* File Search */}
+                    <div className="relative mb-3">
+                      <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-zinc-500" />
+                      <input
+                        type="text"
+                        value={fileSearchQuery}
+                        onChange={(e) => setFileSearchQuery(e.target.value)}
+                        placeholder="Search files..."
+                        className="w-full bg-zinc-900 border border-zinc-800 rounded-lg pl-8 pr-3 py-1.5 text-xs text-zinc-200 outline-none focus:border-violet-500"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      {filteredFiles.map((file) => (
+                        <button
+                          key={file.path}
+                          onClick={() => {
+                            setSelectedFile(file);
+                            setMobileArchTab('code');
+                          }}
+                          className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-left transition-colors ${
+                            selectedFile.path === file.path
+                              ? 'bg-violet-950/50 border border-violet-500/40 text-white font-medium'
+                              : 'text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200'
+                          }`}
+                        >
+                          <span className="flex items-center gap-2 truncate">
+                            {file.language === 'json' ? (
+                              <FileCode className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                            ) : file.language === 'python' ? (
+                              <FileText className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                            ) : (
+                              <Code2 className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                            )}
+                            <span className="truncate">{file.name}</span>
+                          </span>
+                          <span className="text-[10px] text-zinc-500 uppercase">{file.language}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="mt-6 p-3 rounded-xl bg-zinc-900/60 border border-zinc-800 text-[11px] text-zinc-400 space-y-1.5">
+                    <div className="font-semibold text-zinc-300 flex items-center gap-1.5">
+                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>AST Contract Invariant:</span>
+                    </div>
+                    <p className="font-sans text-xs">
+                      All components are bound to <strong className="text-zinc-200">mockData.ts</strong> and <strong className="text-zinc-200">theme.json</strong>. Zero placeholder omissions allowed.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Code / AST Viewer Panel */}
+                <div className={`lg:col-span-8 p-4 bg-zinc-950 flex flex-col justify-between ${
+                  mobileArchTab === 'code' ? 'block' : 'hidden lg:flex'
+                }`}>
                 <div>
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-zinc-800 text-xs text-zinc-400 mb-3 gap-2">
                     <div className="flex items-center gap-2">
@@ -1019,7 +1143,8 @@ export const TerminalDemo: React.FC = () => {
                 </div>
               </div>
             </div>
-          )}
+          </div>
+        )}
 
           {/* TAB 3: MULTI-AGENT STREAM WITH FILTERING & PROMPT EXECUTION */}
           {activeTab === 'chat' && (

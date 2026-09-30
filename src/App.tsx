@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Terminal, Activity, Layers, Menu } from 'lucide-react';
 import { Header } from './components/Header';
 import { Hero } from './components/Hero';
 import { AgentGrid } from './components/AgentGrid';
@@ -27,7 +28,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#09090b] text-zinc-100 selection:bg-violet-500/30 selection:text-violet-200 font-sans flex flex-col">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#09090b] text-zinc-100 selection:bg-violet-500/30 selection:text-violet-200 font-sans flex flex-col pb-16 md:pb-0">
       {/* Top Glassmorphic Navigation Bar */}
       <Header
         onOpenConsole={() => setIsConsoleOpen(true)}
@@ -70,6 +71,65 @@ export default function App() {
         onNavigateSection={handleNavigateSection}
         onOpenLegalModal={handleOpenLegalModal}
       />
+
+      {/* Persistent Mobile Bottom Navigation Dock (md:hidden) */}
+      <div className="md:hidden fixed bottom-3 inset-x-3 z-40">
+        <div className="bg-zinc-950/90 border border-zinc-800 backdrop-blur-xl rounded-2xl p-1.5 shadow-2xl shadow-black flex items-center justify-between font-mono text-xs">
+          <button
+            onClick={() => {
+              handleNavigateSection('terminal-demo');
+              window.dispatchEvent(new CustomEvent('switch-terminal-tab', { detail: 'sandbox' }));
+            }}
+            className="flex-1 py-1.5 px-2 rounded-xl text-center flex flex-col items-center gap-0.5 text-cyan-300 hover:bg-zinc-900 transition-colors"
+          >
+            <Terminal className="w-4 h-4 text-cyan-400" />
+            <span className="text-[10px]">Sandbox</span>
+          </button>
+
+          <button
+            onClick={() => {
+              handleNavigateSection('terminal-demo');
+              window.dispatchEvent(new CustomEvent('switch-terminal-tab', { detail: 'architecture' }));
+            }}
+            className="flex-1 py-1.5 px-2 rounded-xl text-center flex flex-col items-center gap-0.5 text-violet-300 hover:bg-zinc-900 transition-colors"
+          >
+            <span className="text-sm leading-none">🌲</span>
+            <span className="text-[10px]">AST</span>
+          </button>
+
+          <button
+            onClick={() => {
+              handleNavigateSection('terminal-demo');
+              window.dispatchEvent(new CustomEvent('switch-terminal-tab', { detail: 'chat' }));
+            }}
+            className="flex-1 py-1.5 px-2 rounded-xl text-center flex flex-col items-center gap-0.5 text-amber-300 hover:bg-zinc-900 transition-colors"
+          >
+            <Activity className="w-4 h-4 text-amber-400" />
+            <span className="text-[10px]">Stream</span>
+          </button>
+
+          <button
+            onClick={() => {
+              handleNavigateSection('terminal-demo');
+              window.dispatchEvent(new CustomEvent('switch-terminal-tab', { detail: 'dag' }));
+            }}
+            className="flex-1 py-1.5 px-2 rounded-xl text-center flex flex-col items-center gap-0.5 text-indigo-300 hover:bg-zinc-900 transition-colors"
+          >
+            <Layers className="w-4 h-4 text-indigo-400" />
+            <span className="text-[10px]">DAG</span>
+          </button>
+
+          <button
+            onClick={() => {
+              window.dispatchEvent(new CustomEvent('toggle-mobile-menu'));
+            }}
+            className="flex-1 py-1.5 px-2 rounded-xl text-center flex flex-col items-center gap-0.5 bg-violet-600/80 text-white font-bold hover:bg-violet-500 transition-colors shadow-md"
+          >
+            <Menu className="w-4 h-4" />
+            <span className="text-[10px]">Menu</span>
+          </button>
+        </div>
+      </div>
 
       {/* Launch Console Modal */}
       <ConsoleModal

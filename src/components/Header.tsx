@@ -18,6 +18,25 @@ export const Header: React.FC<HeaderProps> = ({ onOpenConsole, onNavigateSection
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [mobileMenuOpen]);
+
+  // Listen for external open-mobile-menu events
+  useEffect(() => {
+    const handleToggle = () => setMobileMenuOpen((prev) => !prev);
+    window.addEventListener('toggle-mobile-menu', handleToggle);
+    return () => window.removeEventListener('toggle-mobile-menu', handleToggle);
+  }, []);
+
   const navLinks = [
     { label: 'Architecture', id: 'architecture' },
     { label: 'Agents', id: 'agents' },
@@ -30,8 +49,8 @@ export const Header: React.FC<HeaderProps> = ({ onOpenConsole, onNavigateSection
   return (
     <header
       className={`sticky top-0 z-50 w-full transition-all duration-300 ${
-        scrolled
-          ? 'bg-zinc-950/80 backdrop-blur-xl border-b border-zinc-800/80 shadow-2xl shadow-black/50'
+        scrolled || mobileMenuOpen
+          ? 'bg-zinc-950/95 backdrop-blur-xl border-b border-zinc-800/80 shadow-2xl shadow-black/50'
           : 'bg-transparent border-b border-zinc-800/40'
       }`}
     >
@@ -43,6 +62,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenConsole, onNavigateSection
             onClick={(e) => {
               e.preventDefault();
               window.scrollTo({ top: 0, behavior: 'smooth' });
+              setMobileMenuOpen(false);
             }}
             className="flex items-center gap-2 sm:gap-2.5 group mr-1 sm:mr-4"
           >
@@ -68,7 +88,7 @@ export const Header: React.FC<HeaderProps> = ({ onOpenConsole, onNavigateSection
           </div>
         </div>
 
-        {/* Navigation Links */}
+        {/* Navigation Links (Desktop) */}
         <nav className="hidden md:flex items-center gap-5 lg:gap-7 text-sm font-medium text-zinc-400 ml-4 lg:ml-8 mr-6 lg:mr-10">
           {navLinks.map((link) => (
             <button
@@ -81,77 +101,209 @@ export const Header: React.FC<HeaderProps> = ({ onOpenConsole, onNavigateSection
           ))}
         </nav>
 
-        {/* Actions Zone with guaranteed gap from nav */}
-        <div className="flex items-center gap-2 sm:gap-3.5 shrink-0 ml-auto">
+        {/* Actions Zone with high-visibility Mobile Menu button */}
+        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 ml-auto">
+          {/* Quick Sandbox Link */}
           <button
-            onClick={() => onNavigateSection('terminal-demo')}
-            className="flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 text-xs font-mono font-medium text-cyan-300 hover:text-white bg-cyan-950/50 hover:bg-cyan-900/60 border border-cyan-500/40 rounded-lg transition-colors whitespace-nowrap shadow-sm shadow-cyan-950/20"
+            onClick={() => {
+              onNavigateSection('terminal-demo');
+              window.dispatchEvent(new CustomEvent('switch-terminal-tab', { detail: 'sandbox' }));
+            }}
+            className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1.5 text-xs font-mono font-medium text-cyan-300 hover:text-white bg-cyan-950/60 hover:bg-cyan-900/60 border border-cyan-500/40 rounded-lg transition-colors whitespace-nowrap shadow-sm shadow-cyan-950/20"
           >
             <Terminal className="w-3.5 h-3.5 text-cyan-400" />
-            <span className="hidden xs:inline sm:inline">Try Sandbox</span>
-            <span className="inline xs:hidden sm:hidden">Sandbox</span>
+            <span className="hidden xs:inline">Try Sandbox</span>
+            <span className="inline xs:hidden">Sandbox</span>
           </button>
 
+          {/* Launch Console - Visible on sm+ */}
           <button
             onClick={onOpenConsole}
-            className="relative group overflow-hidden rounded-lg p-px font-medium text-xs sm:text-sm tracking-wide shadow-lg shadow-violet-950/40 shrink-0"
+            className="hidden sm:inline-flex relative group overflow-hidden rounded-lg p-px font-medium text-xs sm:text-sm tracking-wide shadow-lg shadow-violet-950/40 shrink-0"
           >
             <span className="absolute inset-0 bg-gradient-to-r from-violet-600 via-indigo-500 to-cyan-400 group-hover:opacity-100 transition-opacity"></span>
-            <span className="relative flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 bg-zinc-950 rounded-[7px] text-white transition-all group-hover:bg-opacity-80">
+            <span className="relative flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-zinc-950 rounded-[7px] text-white transition-all group-hover:bg-opacity-80">
               <Sparkles className="w-3.5 h-3.5 text-violet-400 animate-pulse shrink-0" />
-              <span className="font-semibold whitespace-nowrap">Launch Console</span>
-              <ArrowUpRight className="w-3.5 h-3.5 text-zinc-400 group-hover:text-white transition-colors shrink-0 hidden xs:inline" />
+              <span className="font-semibold whitespace-nowrap">Console</span>
+              <ArrowUpRight className="w-3.5 h-3.5 text-zinc-400 group-hover:text-white transition-colors shrink-0" />
             </span>
           </button>
 
-          {/* Mobile menu trigger */}
+          {/* Prominent, High-Visibility Mobile Menu Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white shrink-0 ml-1"
-            aria-label="Toggle menu"
+            className={`md:hidden flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-mono text-xs font-bold transition-all border shrink-0 ${
+              mobileMenuOpen
+                ? 'bg-rose-950/90 text-rose-300 border-rose-500 shadow-md shadow-rose-950/40'
+                : 'bg-zinc-900 hover:bg-zinc-800 text-white border-zinc-700 shadow-md ring-1 ring-violet-500/30'
+            }`}
+            aria-label="Toggle navigation menu"
           >
-            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            {mobileMenuOpen ? <X className="w-4 h-4 text-rose-400" /> : <Menu className="w-4 h-4 text-cyan-400" />}
+            <span>{mobileMenuOpen ? 'Close' : 'Menu'}</span>
           </button>
         </div>
       </div>
 
-      {/* Mobile Menu Dropdown */}
+      {/* Full-Screen Mobile Menu Drawer with Smooth Scroll & High Contrast */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-zinc-950/95 border-b border-zinc-800 px-6 py-4 space-y-3 backdrop-blur-xl">
-          <div className="flex items-center gap-2 pb-2 border-b border-zinc-800/60 text-xs font-mono text-zinc-400">
-            <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span>Cluster Status: Online (Docker & Wasm Runtime)</span>
+        <div className="md:hidden fixed inset-x-0 top-16 bottom-0 z-50 bg-zinc-950/98 backdrop-blur-2xl border-b border-zinc-800 overflow-y-auto overscroll-contain px-5 py-6 space-y-6 shadow-2xl flex flex-col justify-between">
+          <div className="space-y-6">
+            {/* Header cluster status */}
+            <div className="flex items-center justify-between pb-3 border-b border-zinc-800 text-xs font-mono text-zinc-400">
+              <div className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span className="text-zinc-200 font-semibold">WebContainers Online</span>
+              </div>
+              <span className="text-cyan-400">&lt;5ms Wasm</span>
+            </div>
+
+            {/* Platform Navigation Sections */}
+            <div>
+              <span className="text-[11px] font-mono text-zinc-500 uppercase tracking-wider block mb-2.5 font-bold">
+                Navigation Sections:
+              </span>
+              <div className="space-y-1.5">
+                {navLinks.map((link) => (
+                  <button
+                    key={link.id}
+                    onClick={() => {
+                      onNavigateSection(link.id);
+                      setMobileMenuOpen(false);
+                    }}
+                    className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold text-zinc-200 hover:text-white bg-zinc-900/50 hover:bg-zinc-900 border border-zinc-800/80 transition-all text-left"
+                  >
+                    <span>{link.label}</span>
+                    <span className="text-zinc-500 text-xs font-mono">➔</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* All 6 Studio Features */}
+            <div>
+              <span className="text-[11px] font-mono text-zinc-500 uppercase tracking-wider block mb-2.5 font-bold">
+                All 6 Studio Features:
+              </span>
+              <div className="grid grid-cols-2 gap-2 font-mono text-xs">
+                <button
+                  onClick={() => {
+                    onNavigateSection('terminal-demo');
+                    window.dispatchEvent(new CustomEvent('switch-terminal-tab', { detail: 'sandbox' }));
+                    setMobileMenuOpen(false);
+                  }}
+                  className="p-2.5 rounded-xl bg-cyan-950/30 border border-cyan-500/40 text-cyan-300 hover:bg-cyan-950/60 text-left flex flex-col gap-1 transition-all"
+                >
+                  <span className="font-bold flex items-center gap-1.5">
+                    <Terminal className="w-3.5 h-3.5 text-cyan-400" />
+                    <span>⚡ Sandbox</span>
+                  </span>
+                  <span className="text-[10px] text-zinc-400 font-sans">Port 3000 HMR</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    onNavigateSection('terminal-demo');
+                    window.dispatchEvent(new CustomEvent('switch-terminal-tab', { detail: 'architecture' }));
+                    setMobileMenuOpen(false);
+                  }}
+                  className="p-2.5 rounded-xl bg-violet-950/30 border border-violet-500/40 text-violet-300 hover:bg-violet-950/60 text-left flex flex-col gap-1 transition-all"
+                >
+                  <span className="font-bold flex items-center gap-1.5">
+                    <span>🌲 AST & Code</span>
+                  </span>
+                  <span className="text-[10px] text-zinc-400 font-sans">VFS & Parser</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    onNavigateSection('terminal-demo');
+                    window.dispatchEvent(new CustomEvent('switch-terminal-tab', { detail: 'chat' }));
+                    setMobileMenuOpen(false);
+                  }}
+                  className="p-2.5 rounded-xl bg-amber-950/30 border border-amber-500/40 text-amber-300 hover:bg-amber-950/60 text-left flex flex-col gap-1 transition-all"
+                >
+                  <span className="font-bold flex items-center gap-1.5">
+                    <span>💬 Agent Stream</span>
+                  </span>
+                  <span className="text-[10px] text-zinc-400 font-sans">Multi-Agent Chat</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    onNavigateSection('terminal-demo');
+                    window.dispatchEvent(new CustomEvent('switch-terminal-tab', { detail: 'dag' }));
+                    setMobileMenuOpen(false);
+                  }}
+                  className="p-2.5 rounded-xl bg-indigo-950/30 border border-indigo-500/40 text-indigo-300 hover:bg-indigo-950/60 text-left flex flex-col gap-1 transition-all"
+                >
+                  <span className="font-bold flex items-center gap-1.5">
+                    <span>🕸️ DAG Graph</span>
+                  </span>
+                  <span className="text-[10px] text-zinc-400 font-sans">7-Node State</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    onNavigateSection('terminal-demo');
+                    window.dispatchEvent(new CustomEvent('switch-terminal-tab', { detail: 'cli' }));
+                    setMobileMenuOpen(false);
+                  }}
+                  className="p-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-zinc-200 hover:bg-zinc-850 text-left flex flex-col gap-1 transition-all"
+                >
+                  <span className="font-bold flex items-center gap-1.5">
+                    <span>💻 Wasm Shell</span>
+                  </span>
+                  <span className="text-[10px] text-zinc-400 font-sans">Bash Terminal</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    onNavigateSection('terminal-demo');
+                    window.dispatchEvent(new CustomEvent('switch-terminal-tab', { detail: 'compliance' }));
+                    setMobileMenuOpen(false);
+                  }}
+                  className="p-2.5 rounded-xl bg-emerald-950/30 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-950/60 text-left flex flex-col gap-1 transition-all"
+                >
+                  <span className="font-bold flex items-center gap-1.5">
+                    <span>🇪🇺 EU AI Audit</span>
+                  </span>
+                  <span className="text-[10px] text-zinc-400 font-sans">Article 14 Pass</span>
+                </button>
+              </div>
+            </div>
           </div>
-          {navLinks.map((link) => (
-            <button
-              key={link.id}
-              onClick={() => {
-                onNavigateSection(link.id);
-                setMobileMenuOpen(false);
-              }}
-              className="block w-full text-left py-2 text-sm font-medium text-zinc-300 hover:text-cyan-400 transition-colors"
-            >
-              {link.label}
-            </button>
-          ))}
-          <div className="pt-2 flex flex-col gap-2">
+
+          {/* Bottom Actions inside Menu */}
+          <div className="pt-4 border-t border-zinc-800 space-y-2.5">
             <button
               onClick={() => {
                 onNavigateSection('terminal-demo');
+                window.dispatchEvent(new CustomEvent('switch-terminal-tab', { detail: 'sandbox' }));
                 setMobileMenuOpen(false);
               }}
-              className="w-full py-2 px-4 text-xs font-mono font-medium rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-200 text-center"
+              className="w-full py-3 px-4 text-xs font-mono font-bold rounded-xl bg-gradient-to-r from-cyan-600 to-violet-600 text-white text-center flex items-center justify-center gap-2 shadow-lg shadow-cyan-950/50"
             >
-              Open Interactive Terminal
+              <Terminal className="w-4 h-4 text-cyan-300" />
+              <span>Launch Live Sandbox (Port 3000)</span>
             </button>
+
             <button
               onClick={() => {
                 onOpenConsole();
                 setMobileMenuOpen(false);
               }}
-              className="w-full py-2 px-4 text-xs font-semibold rounded-lg bg-gradient-to-r from-violet-600 to-cyan-500 text-white text-center shadow-lg"
+              className="w-full py-2.5 px-4 text-xs font-semibold rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-200 text-center hover:bg-zinc-850 flex items-center justify-center gap-2"
             >
-              Launch Console
+              <Sparkles className="w-3.5 h-3.5 text-violet-400" />
+              <span>Open Studio Console Modal</span>
+            </button>
+
+            <button
+              onClick={() => setMobileMenuOpen(false)}
+              className="w-full py-2 text-xs font-mono text-zinc-500 hover:text-zinc-300 text-center"
+            >
+              ✕ Close Menu
             </button>
           </div>
         </div>

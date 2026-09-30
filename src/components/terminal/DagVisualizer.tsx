@@ -189,8 +189,38 @@ export const DagVisualizer: React.FC<DagVisualizerProps> = ({
         </div>
       </div>
 
-      {/* Interactive Horizontal Flow Graph */}
+      {/* Mobile Stage Stepper (Visible on mobile/tablet) */}
+      <div className="sm:hidden space-y-2.5">
+        <div className="flex items-center justify-between text-[11px] text-zinc-400 pb-1 border-b border-zinc-800">
+          <span>SELECT AGENT STAGE:</span>
+          <span>{nodes.findIndex((n) => n.id === selectedNodeId) + 1} of {nodes.length}</span>
+        </div>
+        <div className="grid grid-cols-4 gap-1.5">
+          {nodes.map((n, i) => (
+            <button
+              key={n.id}
+              onClick={() => {
+                setSelectedNodeId(n.id);
+                if (onSelectNode) onSelectNode(n.id);
+              }}
+              className={`px-2 py-1.5 rounded-lg text-[10px] font-mono font-bold transition-all truncate border ${
+                selectedNodeId === n.id
+                  ? 'bg-violet-600 text-white border-violet-400 shadow-sm'
+                  : 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:text-white'
+              }`}
+            >
+              {i + 1}. {n.agent}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Interactive Horizontal Flow Graph (Desktop / Wide View) */}
       <div className="overflow-x-auto pb-4 pt-2">
+        <div className="text-[10px] text-zinc-500 mb-1.5 sm:hidden flex items-center justify-between">
+          <span>Interactive DAG Pipeline:</span>
+          <span>← Swipe horizontally →</span>
+        </div>
         <div className="flex items-center gap-3 min-w-[760px]">
           {nodes.map((node, index) => {
             const isSelected = selectedNodeId === node.id;
