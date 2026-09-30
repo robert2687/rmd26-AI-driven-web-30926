@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Terminal, Activity, Layers, Menu } from 'lucide-react';
 import { Header } from './components/Header';
 import { Hero } from './components/Hero';
@@ -11,10 +11,29 @@ import { Roadmap } from './components/Roadmap';
 import { ConsoleModal } from './components/ConsoleModal';
 import { Footer } from './components/Footer';
 import { LegalModal, LegalTab } from './components/LegalModal';
+import { MobileSideDrawer } from './components/MobileSideDrawer';
 
 export default function App() {
   const [isConsoleOpen, setIsConsoleOpen] = useState(false);
+  const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
   const [legalModalTab, setLegalModalTab] = useState<LegalTab | null>(null);
+
+  // Global listeners for drawer events
+  useEffect(() => {
+    const handleToggle = () => setIsMobileDrawerOpen((prev) => !prev);
+    const handleOpen = () => setIsMobileDrawerOpen(true);
+    const handleClose = () => setIsMobileDrawerOpen(false);
+
+    window.addEventListener('toggle-mobile-menu', handleToggle);
+    window.addEventListener('open-mobile-drawer', handleOpen);
+    window.addEventListener('close-mobile-drawer', handleClose);
+
+    return () => {
+      window.removeEventListener('toggle-mobile-menu', handleToggle);
+      window.removeEventListener('open-mobile-drawer', handleOpen);
+      window.removeEventListener('close-mobile-drawer', handleClose);
+    };
+  }, []);
 
   const handleNavigateSection = (sectionId: string) => {
     const el = document.getElementById(sectionId);
@@ -33,6 +52,8 @@ export default function App() {
       <Header
         onOpenConsole={() => setIsConsoleOpen(true)}
         onNavigateSection={handleNavigateSection}
+        isMobileDrawerOpen={isMobileDrawerOpen}
+        onToggleMobileDrawer={() => setIsMobileDrawerOpen((prev) => !prev)}
       />
 
       {/* Main Content Area */}
@@ -120,16 +141,25 @@ export default function App() {
           </button>
 
           <button
-            onClick={() => {
-              window.dispatchEvent(new CustomEvent('toggle-mobile-menu'));
-            }}
-            className="flex-1 py-1.5 px-2 rounded-xl text-center flex flex-col items-center gap-0.5 bg-violet-600/80 text-white font-bold hover:bg-violet-500 transition-colors shadow-md"
+            type="button"
+            onClick={() => setIsMobileDrawerOpen(true)}
+            aria-label="Open mobile navigation menu"
+            className="flex-1 py-1.5 px-2 rounded-xl text-center flex flex-col items-center gap-0.5 bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-bold hover:from-violet-500 hover:to-indigo-500 transition-all shadow-md shadow-violet-950/40 cursor-pointer active:scale-95"
           >
-            <Menu className="w-4 h-4" />
+            <Menu className="w-4 h-4 text-cyan-300" />
             <span className="text-[10px]">Menu</span>
           </button>
         </div>
       </div>
+
+      {/* Side-Drawer Navigation Menu (Slides out when Menu is clicked in footer or header) */}
+      <MobileSideDrawer
+        isOpen={isMobileDrawerOpen}
+        onClose={() => setIsMobileDrawerOpen(false)}
+        onNavigateSection={handleNavigateSection}
+        onOpenConsole={() => setIsConsoleOpen(true)}
+        onOpenLegalModal={handleOpenLegalModal}
+      />
 
       {/* Launch Console Modal */}
       <ConsoleModal

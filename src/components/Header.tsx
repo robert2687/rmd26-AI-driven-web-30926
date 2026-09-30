@@ -1,14 +1,32 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Terminal, Shield, Cpu, Sparkles, Menu, X, ArrowUpRight } from 'lucide-react';
 
 interface HeaderProps {
   onOpenConsole: () => void;
   onNavigateSection: (sectionId: string) => void;
+  isMobileDrawerOpen?: boolean;
+  onToggleMobileDrawer?: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onOpenConsole, onNavigateSection }) => {
+export const Header: React.FC<HeaderProps> = ({
+  onOpenConsole,
+  onNavigateSection,
+  isMobileDrawerOpen,
+  onToggleMobileDrawer
+}) => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const isDrawerActive = isMobileDrawerOpen !== undefined ? isMobileDrawerOpen : mobileMenuOpen;
+
+  const handleToggleMenu = () => {
+    if (onToggleMobileDrawer) {
+      onToggleMobileDrawer();
+    } else {
+      setMobileMenuOpen((prev) => !prev);
+    }
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -18,24 +36,30 @@ export const Header: React.FC<HeaderProps> = ({ onOpenConsole, onNavigateSection
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Lock body scroll when mobile menu is open
+  // Lock body scroll when mobile menu is open (if not using external drawer)
   useEffect(() => {
-    if (mobileMenuOpen) {
+    if (mobileMenuOpen && !onToggleMobileDrawer) {
       document.body.style.overflow = 'hidden';
-    } else {
+    } else if (!onToggleMobileDrawer) {
       document.body.style.overflow = '';
     }
     return () => {
-      document.body.style.overflow = '';
+      if (!onToggleMobileDrawer) document.body.style.overflow = '';
     };
-  }, [mobileMenuOpen]);
+  }, [mobileMenuOpen, onToggleMobileDrawer]);
 
   // Listen for external open-mobile-menu events
   useEffect(() => {
-    const handleToggle = () => setMobileMenuOpen((prev) => !prev);
+    const handleToggle = () => {
+      if (onToggleMobileDrawer) {
+        onToggleMobileDrawer();
+      } else {
+        setMobileMenuOpen((prev) => !prev);
+      }
+    };
     window.addEventListener('toggle-mobile-menu', handleToggle);
     return () => window.removeEventListener('toggle-mobile-menu', handleToggle);
-  }, []);
+  }, [onToggleMobileDrawer]);
 
   const navLinks = [
     { label: 'Architecture', id: 'architecture' },
@@ -131,23 +155,25 @@ export const Header: React.FC<HeaderProps> = ({ onOpenConsole, onNavigateSection
 
           {/* Prominent, High-Visibility Mobile Menu Button */}
           <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className={`md:hidden flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-mono text-xs font-bold transition-all border shrink-0 ${
-              mobileMenuOpen
-                ? 'bg-rose-950/90 text-rose-300 border-rose-500 shadow-md shadow-rose-950/40'
-                : 'bg-zinc-900 hover:bg-zinc-800 text-white border-zinc-700 shadow-md ring-1 ring-violet-500/30'
+            type="button"
+            onClick={handleToggleMenu}
+            aria-expanded={isDrawerActive}
+            aria-label={isDrawerActive ? 'Close navigation drawer' : 'Open navigation drawer'}
+            className={`md:hidden flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-mono text-xs font-bold transition-all border shrink-0 cursor-pointer touch-manipulation select-none ${
+              isDrawerActive
+                ? 'bg-rose-950 text-rose-200 border-rose-500 shadow-lg shadow-rose-950/60 ring-2 ring-rose-500/50'
+                : 'bg-zinc-900 hover:bg-zinc-800 text-white border-zinc-700 shadow-md ring-1 ring-violet-500/40 hover:ring-violet-400'
             }`}
-            aria-label="Toggle navigation menu"
           >
-            {mobileMenuOpen ? <X className="w-4 h-4 text-rose-400" /> : <Menu className="w-4 h-4 text-cyan-400" />}
-            <span>{mobileMenuOpen ? 'Close' : 'Menu'}</span>
+            {isDrawerActive ? <X className="w-4 h-4 text-rose-300" /> : <Menu className="w-4 h-4 text-cyan-400" />}
+            <span>{isDrawerActive ? 'Close' : 'Menu'}</span>
           </button>
         </div>
       </div>
 
-      {/* Full-Screen Mobile Menu Drawer with Smooth Scroll & High Contrast */}
-      {mobileMenuOpen && (
-        <div className="md:hidden fixed inset-x-0 top-16 bottom-0 z-50 bg-zinc-950/98 backdrop-blur-2xl border-b border-zinc-800 overflow-y-auto overscroll-contain px-5 py-6 space-y-6 shadow-2xl flex flex-col justify-between">
+      {/* Fallback Mobile Menu Drawer mounted to document.body via Portal if no external drawer is wired */}
+      {!onToggleMobileDrawer && mobileMenuOpen && typeof document !== 'undefined' && createPortal(
+        <div className="md:hidden fixed inset-x-0 top-16 bottom-0 z-[9999] bg-zinc-950/98 backdrop-blur-2xl border-b border-zinc-800 overflow-y-auto overscroll-contain px-5 py-6 space-y-6 shadow-2xl flex flex-col justify-between">
           <div className="space-y-6">
             {/* Header cluster status */}
             <div className="flex items-center justify-between pb-3 border-b border-zinc-800 text-xs font-mono text-zinc-400">
@@ -306,7 +332,8 @@ export const Header: React.FC<HeaderProps> = ({ onOpenConsole, onNavigateSection
               ✕ Close Menu
             </button>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </header>
   );

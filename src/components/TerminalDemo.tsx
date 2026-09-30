@@ -204,34 +204,53 @@ export const TerminalDemo: React.FC = () => {
     const promptText = customPrompt || preset.prompt;
     setCurrentActiveAgent('Planner');
 
+    const lowerP = promptText.toLowerCase();
+    const isSlovak = lowerP.includes('slovak') || lowerP.includes('sk-nic') || lowerP.includes('vat') || lowerP.includes('dph');
+    const isEU = lowerP.includes('eu ai') || lowerP.includes('article 14') || lowerP.includes('owasp') || lowerP.includes('compliance');
+    const isTicker = lowerP.includes('ticker') || lowerP.includes('websocket') || lowerP.includes('arbitrage');
+
     const generatedLogs: TerminalLog[] = [
       {
         id: `log-${Date.now()}-1`,
         timestamp: '00:00.08',
         agent: 'Planner',
         level: 'info',
-        message: `Ingesting intent: "${promptText}"`
+        message: isSlovak
+          ? `Ingesting intent: "${promptText}". Resolved target: Slovak Public Admin & SK-NIC Innovation Fund (Call SKNICVP26_017).`
+          : isEU
+          ? `Ingesting intent: "${promptText}". Target: Article 14 Human Oversight Verification & Risk Classification.`
+          : isTicker
+          ? `Ingesting intent: "${promptText}". Target: Binance/Uniswap low-latency order book arbitrage stream.`
+          : `Ingesting intent: "${promptText}"`
       },
       {
         id: `log-${Date.now()}-2`,
         timestamp: '00:00.32',
         agent: 'Planner',
         level: 'success',
-        message: `Generated execution graph (${preset.filesGenerated} target files). Enforcing mockData.ts seed contract to prevent hollow UI.`
+        message: isSlovak
+          ? `Decomposed DAG graph: 4 modular units. Enforced Finančná správa SR schema & mockData.ts seed contracts.`
+          : `Generated execution graph (${preset.filesGenerated} target files). Enforcing mockData.ts seed contract to prevent hollow UI.`
       },
       {
         id: `log-${Date.now()}-3`,
         timestamp: '00:00.74',
         agent: 'Architect',
         level: 'info',
-        message: `Mounting in-memory VFS at /workspace. Scaffolding component tree and theme.json token layer.`
+        message: isSlovak
+          ? `Mounting /workspace VFS. Scaffolding bilingual SK/EN GovTech schema and IČ DPH validation regex.`
+          : isEU
+          ? `Mounting /workspace VFS. Scaffolding Article 14 human-in-the-loop hash ledger in /compliance-ledger.json.`
+          : isTicker
+          ? `Mounting /workspace VFS. Configuring client-side Wasm WebSockets with sub-5ms heartbeat.`
+          : `Mounting in-memory VFS at /workspace. Scaffolding component tree and theme.json token layer.`
       },
       {
         id: `log-${Date.now()}-4`,
         timestamp: '00:01.20',
         agent: 'Coder',
         level: 'code',
-        message: `Synthesizing ${preset.linesOfCode} LOC across ${preset.filesGenerated} modular TypeScript units.`
+        message: `Synthesizing ${preset.linesOfCode} LOC across ${preset.filesGenerated} modular TypeScript units with zero external VM dependencies.`
       }
     ];
 
@@ -350,23 +369,34 @@ export const TerminalDemo: React.FC = () => {
   };
 
   // Handle custom user-entered prompt in the Multi-Agent Stream
-  const handleCustomPromptSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!customPromptInput.trim()) return;
+  const handleCustomPromptSubmit = (e?: React.FormEvent, promptOverride?: string) => {
+    if (e) e.preventDefault();
+    const targetPrompt = promptOverride || customPromptInput;
+    if (!targetPrompt.trim()) return;
 
-    const customPreset: SimulationPreset = {
-      id: `custom-${Date.now()}`,
-      title: 'Custom User Specification',
-      description: customPromptInput,
-      category: 'User Custom DAG',
-      prompt: customPromptInput,
-      filesGenerated: 7,
-      linesOfCode: 980,
-      selfHealCount: 0
+    const lower = targetPrompt.toLowerCase();
+    let matchingPreset = SIMULATION_PRESETS[0];
+
+    if (lower.includes('slovak') || lower.includes('sk-nic') || lower.includes('vat') || lower.includes('dph')) {
+      matchingPreset = SIMULATION_PRESETS.find((p) => p.id === 'slovak-copilot') || SIMULATION_PRESETS[3];
+    } else if (lower.includes('eu ai') || lower.includes('article 14') || lower.includes('owasp') || lower.includes('compliance') || lower.includes('audit')) {
+      matchingPreset = SIMULATION_PRESETS.find((p) => p.id === 'eu-compliance') || SIMULATION_PRESETS[2];
+    } else if (lower.includes('stripe') || lower.includes('billing') || lower.includes('saas') || lower.includes('tier') || lower.includes('subscription')) {
+      matchingPreset = SIMULATION_PRESETS.find((p) => p.id === 'saas-billing') || SIMULATION_PRESETS[1];
+    } else if (lower.includes('ticker') || lower.includes('websocket') || lower.includes('crypto') || lower.includes('arbitrage')) {
+      matchingPreset = SIMULATION_PRESETS.find((p) => p.id === 'crypto-bot') || SIMULATION_PRESETS[0];
+    }
+
+    const dynamicPreset: SimulationPreset = {
+      ...matchingPreset,
+      id: matchingPreset.id,
+      title: `${matchingPreset.title} · Intent Active`,
+      description: targetPrompt,
+      prompt: targetPrompt
     };
 
-    handleRunSwarm(customPreset, customPromptInput);
-    setCustomPromptInput('');
+    handleRunSwarm(dynamicPreset, targetPrompt);
+    setCustomPromptInput(targetPrompt);
   };
 
   const handleCopyCode = () => {
@@ -1227,45 +1257,115 @@ export const TerminalDemo: React.FC = () => {
                 <div ref={logsEndRef} />
               </div>
 
-              {/* One-Click Prompt Suggestions */}
-              <div className="flex flex-wrap items-center gap-1.5 pt-3 pb-1 text-[11px] text-zinc-400">
-                <span className="text-zinc-500 mr-1">Suggestions:</span>
-                {[
-                  '⚡ Add WebSocket real-time ticker stream',
-                  '🇪🇺 Verify EU AI Act Article 14 invariant',
-                  '🛡️ Scan OWASP Top 10 for GenAI',
-                  '🇸🇰 Generate Slovak VAT & SK-NIC tender integration'
-                ].map((sugg) => (
-                  <button
-                    key={sugg}
-                    onClick={() => {
-                      setCustomPromptInput(sugg);
-                    }}
-                    className="px-2.5 py-1 rounded-lg bg-zinc-900/80 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 hover:text-white transition-colors text-[10px]"
-                  >
-                    {sugg}
-                  </button>
-                ))}
+              {/* One-Click Prompt Suggestions & Intent Execution */}
+              <div className="pt-3 pb-1 text-[11px] text-zinc-400 space-y-2">
+                <div className="flex items-center justify-between text-zinc-400 font-mono text-[10px]">
+                  <span className="flex items-center gap-1.5 text-zinc-300 font-bold uppercase tracking-wider">
+                    <Sparkles className="w-3 h-3 text-cyan-400 animate-pulse" />
+                    <span>Suggestions:</span>
+                  </span>
+                  <span className="text-zinc-500 hidden sm:inline">Click to load or tap ▶ to run</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                  {[
+                    { label: '⚡ Add WebSocket real-time ticker stream', tag: 'FinTech', preset: 'crypto-bot' },
+                    { label: '🇪🇺 Verify EU AI Act Article 14 invariant', tag: 'GovTech', preset: 'eu-compliance' },
+                    { label: '🛡️ Scan OWASP Top 10 for GenAI', tag: 'Security', preset: 'eu-compliance' },
+                    { label: '🇸🇰 Generate Slovak VAT & SK-NIC tender integration', tag: 'Slovak Gov', preset: 'slovak-copilot' }
+                  ].map((sugg) => {
+                    const isSelected = customPromptInput === sugg.label;
+                    return (
+                      <div
+                        key={sugg.label}
+                        onClick={() => {
+                          setCustomPromptInput(sugg.label);
+                        }}
+                        className={`cursor-pointer group flex items-center justify-between px-3 py-2 rounded-xl border text-xs font-mono transition-all ${
+                          isSelected
+                            ? 'bg-violet-950/80 border-cyan-400 text-white shadow-md shadow-cyan-950/30 ring-1 ring-cyan-400/50'
+                            : 'bg-zinc-900/60 hover:bg-zinc-900 border-zinc-800/80 text-zinc-300 hover:text-white hover:border-zinc-700'
+                        }`}
+                      >
+                        <span className="truncate mr-2 font-medium text-[11px]">{sugg.label}</span>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <span className="text-[9px] px-1.5 py-0.5 rounded bg-zinc-950 border border-zinc-800 text-zinc-400 uppercase font-sans">
+                            {sugg.tag}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCustomPromptSubmit(undefined, sugg.label);
+                            }}
+                            title="Execute this prompt swarm immediately"
+                            className="p-1 rounded-md bg-cyan-950 hover:bg-cyan-900 border border-cyan-500/50 text-cyan-300 hover:text-cyan-200 transition-colors cursor-pointer"
+                          >
+                            <Play className="w-2.5 h-2.5 fill-current" />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
 
               {/* Custom Prompt Input Bar */}
-              <form onSubmit={handleCustomPromptSubmit} className="mt-2 pt-3 border-t border-zinc-800 flex items-center gap-2">
-                <span className="text-cyan-400 font-bold">&gt;</span>
-                <input
-                  type="text"
-                  value={customPromptInput}
-                  onChange={(e) => setCustomPromptInput(e.target.value)}
-                  placeholder={`Type any feature or prompt (e.g., "${selectedPreset.prompt}")...`}
-                  className="flex-1 bg-zinc-950/80 border border-zinc-800 rounded-lg px-3 py-1.5 text-zinc-100 text-xs outline-none focus:border-violet-500"
-                />
-                <button
-                  type="submit"
-                  disabled={isSimulating}
-                  className="px-4 py-1.5 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white rounded-lg text-xs font-semibold transition-colors disabled:opacity-50 flex items-center gap-1.5 shrink-0 shadow-md"
-                >
-                  <Send className="w-3 h-3" />
-                  <span>{isSimulating ? 'Composing...' : 'Execute Swarm'}</span>
-                </button>
+              <form onSubmit={handleCustomPromptSubmit} className="mt-2 pt-3 border-t border-zinc-800 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                <div className="flex-1 flex items-center gap-2 bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 focus-within:border-cyan-500 focus-within:ring-1 focus-within:ring-cyan-500/40 transition-all shadow-inner">
+                  <span className="text-cyan-400 font-bold font-mono text-xs select-none shrink-0">&gt;</span>
+                  <input
+                    type="text"
+                    value={customPromptInput}
+                    onChange={(e) => setCustomPromptInput(e.target.value)}
+                    placeholder={`Type any feature or prompt (e.g., "${selectedPreset.prompt}")...`}
+                    className="flex-1 bg-transparent text-zinc-100 text-xs font-mono outline-none placeholder:text-zinc-500"
+                  />
+                  {customPromptInput && (
+                    <button
+                      type="button"
+                      onClick={() => setCustomPromptInput('')}
+                      className="text-zinc-500 hover:text-zinc-300 text-xs px-1 cursor-pointer"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="submit"
+                    disabled={isSimulating}
+                    className={`flex-1 sm:flex-initial px-5 py-2.5 rounded-xl text-xs font-mono font-bold transition-all flex items-center justify-center gap-2 shadow-lg disabled:opacity-50 cursor-pointer ${
+                      customPromptInput.trim()
+                        ? 'bg-gradient-to-r from-violet-600 via-indigo-500 to-cyan-500 hover:from-violet-500 hover:to-cyan-400 text-white shadow-violet-950/60 ring-1 ring-cyan-400/40 animate-pulse'
+                        : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700'
+                    }`}
+                  >
+                    {isSimulating ? (
+                      <>
+                        <RotateCcw className="w-3.5 h-3.5 animate-spin text-cyan-300" />
+                        <span>Composing...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-3.5 h-3.5 text-cyan-300" />
+                        <span>Execute Swarm</span>
+                      </>
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('sandbox')}
+                    className="px-3 py-2.5 rounded-xl text-xs font-mono font-bold bg-cyan-950/70 border border-cyan-500/50 text-cyan-300 hover:bg-cyan-900/60 transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer"
+                    title="Switch to live Sandbox Output to see current running app"
+                  >
+                    <Terminal className="w-3.5 h-3.5 text-cyan-400" />
+                    <span className="hidden sm:inline">View Sandbox</span>
+                    <span className="sm:hidden">Port 3000</span>
+                  </button>
+                </div>
               </form>
             </div>
           )}
