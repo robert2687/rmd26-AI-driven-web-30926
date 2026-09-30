@@ -42,8 +42,8 @@ export const AgentGrid: React.FC<AgentGridProps> = ({ onSelectAgentForDemo }) =>
   };
 
   return (
-    <section id="agents" className="py-24 relative bg-zinc-950 border-t border-zinc-800/60">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="agents" className="py-16 sm:py-24 relative bg-zinc-950 border-t border-zinc-800/60 w-full overflow-hidden">
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-16">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-xs font-mono text-cyan-400 mb-3">

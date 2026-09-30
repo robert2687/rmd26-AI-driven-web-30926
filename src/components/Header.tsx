@@ -23,7 +23,8 @@ export const Header: React.FC<HeaderProps> = ({ onOpenConsole, onNavigateSection
     { label: 'Agents', id: 'agents' },
     { label: 'Interactive Demo', id: 'terminal-demo' },
     { label: 'Security & EU Act', id: 'security' },
-    { label: 'Benchmark', id: 'comparison' }
+    { label: 'Benchmark', id: 'comparison' },
+    { label: 'Roadmap', id: 'roadmap' }
   ];
 
   return (
@@ -34,18 +35,18 @@ export const Header: React.FC<HeaderProps> = ({ onOpenConsole, onNavigateSection
           : 'bg-transparent border-b border-zinc-800/40'
       }`}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         {/* Brand Zone */}
-        <div className="flex items-center gap-3 shrink-0 mr-8 lg:mr-12">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0 mr-2 md:mr-8 lg:mr-12">
           <a
             href="#"
             onClick={(e) => {
               e.preventDefault();
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
-            className="flex items-center gap-2.5 group mr-2 sm:mr-4"
+            className="flex items-center gap-2 sm:gap-2.5 group mr-1 sm:mr-4"
           >
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-600 to-cyan-500 p-0.5 shadow-lg shadow-violet-500/20 group-hover:shadow-violet-500/40 transition-shadow">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-600 to-cyan-500 p-0.5 shadow-lg shadow-violet-500/20 group-hover:shadow-violet-500/40 transition-shadow shrink-0">
               <div className="w-full h-full bg-zinc-950 rounded-[6px] flex items-center justify-center">
                 <Cpu className="w-4 h-4 text-cyan-400 group-hover:text-violet-400 transition-colors" />
               </div>
@@ -81,31 +82,32 @@ export const Header: React.FC<HeaderProps> = ({ onOpenConsole, onNavigateSection
         </nav>
 
         {/* Actions Zone with guaranteed gap from nav */}
-        <div className="flex items-center gap-3 sm:gap-3.5 shrink-0 ml-4 sm:ml-6 lg:ml-8">
+        <div className="flex items-center gap-2 sm:gap-3.5 shrink-0 ml-auto">
           <button
             onClick={() => onNavigateSection('terminal-demo')}
-            className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-mono font-medium text-zinc-300 hover:text-white bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-lg transition-colors whitespace-nowrap"
+            className="flex items-center gap-1.5 px-2.5 sm:px-3.5 py-1.5 text-xs font-mono font-medium text-cyan-300 hover:text-white bg-cyan-950/50 hover:bg-cyan-900/60 border border-cyan-500/40 rounded-lg transition-colors whitespace-nowrap shadow-sm shadow-cyan-950/20"
           >
             <Terminal className="w-3.5 h-3.5 text-cyan-400" />
-            <span>Try Sandbox</span>
+            <span className="hidden xs:inline sm:inline">Try Sandbox</span>
+            <span className="inline xs:hidden sm:hidden">Sandbox</span>
           </button>
 
           <button
             onClick={onOpenConsole}
-            className="relative group overflow-hidden rounded-lg p-px font-medium text-xs sm:text-sm tracking-wide shadow-lg shadow-violet-950/40"
+            className="relative group overflow-hidden rounded-lg p-px font-medium text-xs sm:text-sm tracking-wide shadow-lg shadow-violet-950/40 shrink-0"
           >
             <span className="absolute inset-0 bg-gradient-to-r from-violet-600 via-indigo-500 to-cyan-400 group-hover:opacity-100 transition-opacity"></span>
-            <span className="relative flex items-center gap-2 px-4 py-1.5 sm:py-2 bg-zinc-950 rounded-[7px] text-white transition-all group-hover:bg-opacity-80">
-              <Sparkles className="w-3.5 h-3.5 text-violet-400 animate-pulse" />
-              <span className="font-semibold">Launch Console</span>
-              <ArrowUpRight className="w-3.5 h-3.5 text-zinc-400 group-hover:text-white transition-colors" />
+            <span className="relative flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 bg-zinc-950 rounded-[7px] text-white transition-all group-hover:bg-opacity-80">
+              <Sparkles className="w-3.5 h-3.5 text-violet-400 animate-pulse shrink-0" />
+              <span className="font-semibold whitespace-nowrap">Launch Console</span>
+              <ArrowUpRight className="w-3.5 h-3.5 text-zinc-400 group-hover:text-white transition-colors shrink-0 hidden xs:inline" />
             </span>
           </button>
 
           {/* Mobile menu trigger */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white"
+            className="md:hidden p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-white shrink-0 ml-1"
             aria-label="Toggle menu"
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}

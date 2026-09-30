@@ -6,6 +6,7 @@ import { TerminalDemo } from './components/TerminalDemo';
 import { SecurityCompliance } from './components/SecurityCompliance';
 import { ArchitectureDiagram } from './components/ArchitectureDiagram';
 import { BenchmarkSection } from './components/BenchmarkSection';
+import { Roadmap } from './components/Roadmap';
 import { ConsoleModal } from './components/ConsoleModal';
 import { Footer } from './components/Footer';
 import { LegalModal, LegalTab } from './components/LegalModal';
@@ -26,7 +27,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#09090b] text-zinc-100 selection:bg-violet-500/30 selection:text-violet-200 font-sans">
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-[#09090b] text-zinc-100 selection:bg-violet-500/30 selection:text-violet-200 font-sans flex flex-col">
       {/* Top Glassmorphic Navigation Bar */}
       <Header
         onOpenConsole={() => setIsConsoleOpen(true)}
@@ -58,6 +59,9 @@ export default function App() {
 
         {/* Benchmarks & Performance Metrics */}
         <BenchmarkSection />
+
+        {/* Development Roadmap (Timeline: Completed vs Upcoming) */}
+        <Roadmap onOpenConsole={() => setIsConsoleOpen(true)} />
       </main>
 
       {/* High-Impact CTA Banner & Clean Footer */}

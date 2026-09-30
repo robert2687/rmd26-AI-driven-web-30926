@@ -10,8 +10,8 @@ interface SecurityComplianceProps {
 
 export const SecurityCompliance: React.FC<SecurityComplianceProps> = ({ onOpenLegalModal }) => {
   return (
-    <section id="security" className="py-24 relative bg-zinc-950 border-t border-zinc-800/80">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="security" className="py-16 sm:py-24 relative bg-zinc-950 border-t border-zinc-800/80 w-full overflow-hidden">
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto mb-16">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-xs font-mono text-emerald-400 mb-3">

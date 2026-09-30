@@ -57,17 +57,17 @@ export const Hero: React.FC<HeroProps> = ({ onExploreDemo, onOpenDocs, onOpenCon
   }, [isRunning, agentSteps.length]);
 
   return (
-    <section className="relative pt-12 pb-20 overflow-hidden bg-cyber-grid bg-radial-gradient">
+    <section className="relative pt-12 pb-20 overflow-hidden bg-cyber-grid bg-radial-gradient w-full">
       {/* Background glow orbs */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-violet-600/15 blur-[120px] rounded-full pointer-events-none -z-10" />
-      <div className="absolute top-1/3 right-10 w-[450px] h-[300px] bg-cyan-500/10 blur-[100px] rounded-full pointer-events-none -z-10" />
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] max-w-full h-[350px] bg-violet-600/15 blur-[120px] rounded-full pointer-events-none -z-10" />
+      <div className="absolute top-1/3 right-0 sm:right-10 w-[320px] sm:w-[450px] max-w-full h-[300px] bg-cyan-500/10 blur-[100px] rounded-full pointer-events-none -z-10" />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-4xl mx-auto">
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-zinc-900/90 border border-violet-500/30 text-xs font-mono font-medium text-violet-300 shadow-inner mb-6 backdrop-blur-md">
-            <span className="flex h-1.5 w-1.5 rounded-full bg-cyan-400 animate-ping" />
-            <span className="text-zinc-200">⚡ Autonomous AI Systems &amp; Isolated Sandbox Execution</span>
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 max-w-full rounded-full bg-zinc-900/90 border border-violet-500/30 text-xs font-mono font-medium text-violet-300 shadow-inner mb-6 backdrop-blur-md">
+            <span className="flex h-1.5 w-1.5 rounded-full bg-cyan-400 animate-ping shrink-0" />
+            <span className="text-zinc-200 text-[11px] sm:text-xs truncate">⚡ Autonomous AI Systems &amp; Isolated Sandbox Execution</span>
           </div>
 
           {/* Headline H1 */}
@@ -83,30 +83,65 @@ export const Hero: React.FC<HeroProps> = ({ onExploreDemo, onOpenDocs, onOpenCon
             An integrated multi-agent ecosystem for real-time code generation, closed-loop AST review, and hermetic browser-native WebContainers execution.
           </p>
 
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-14">
+          {/* Centralized Interactive Demo Launchpad CTAs */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3.5 mb-6">
             <button
               onClick={onExploreDemo}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-semibold text-sm sm:text-base shadow-xl shadow-violet-900/40 hover:shadow-violet-600/50 transition-all hover:scale-[1.02] active:scale-[0.98]"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 via-violet-600 to-indigo-600 hover:from-cyan-400 hover:to-violet-500 text-white font-bold text-sm sm:text-base shadow-xl shadow-cyan-950/40 hover:shadow-cyan-600/30 transition-all hover:scale-[1.02] active:scale-[0.98] ring-1 ring-cyan-400/40"
             >
-              <span>Explore Platform</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-
-            <button
-              onClick={onOpenDocs}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-zinc-900/80 hover:bg-zinc-800 text-zinc-200 hover:text-white border border-zinc-800 hover:border-zinc-700 font-medium text-sm sm:text-base backdrop-blur-md transition-all"
-            >
-              <BookOpen className="w-4 h-4 text-zinc-400" />
-              <span>Documentation</span>
+              <Terminal className="w-4 h-4 text-cyan-200" />
+              <span>Try In-Browser Sandbox</span>
+              <span className="px-2 py-0.5 rounded-md bg-zinc-950/60 text-[10px] text-cyan-300 font-mono border border-cyan-400/30">
+                Port 3000
+              </span>
             </button>
 
             <button
               onClick={onOpenConsole}
-              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-zinc-950 text-cyan-400 border border-cyan-500/40 hover:border-cyan-400 font-mono text-sm tracking-tight transition-all"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl bg-zinc-900/90 hover:bg-zinc-800 text-zinc-100 hover:text-white border border-zinc-800 hover:border-zinc-700 font-medium text-sm sm:text-base backdrop-blur-md transition-all shadow-lg"
             >
-              <Cpu className="w-4 h-4 text-cyan-400" />
-              <span>Launch Studio IDE</span>
+              <Sparkles className="w-4 h-4 text-violet-400 animate-pulse" />
+              <span>Launch Studio Console</span>
+            </button>
+
+            <button
+              onClick={onOpenDocs}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl bg-zinc-950/80 hover:bg-zinc-900 text-zinc-300 hover:text-white border border-zinc-800 font-mono text-xs sm:text-sm tracking-tight transition-all"
+            >
+              <BookOpen className="w-3.5 h-3.5 text-zinc-400" />
+              <span>Architecture Specs</span>
+            </button>
+          </div>
+
+          {/* Quick Sandbox Environment Launchpad */}
+          <div className="inline-flex flex-wrap items-center justify-center gap-2 p-2 rounded-2xl bg-zinc-950/80 border border-zinc-800/80 mb-12 font-mono text-xs max-w-3xl mx-auto shadow-inner">
+            <span className="text-zinc-500 text-[11px] px-2 flex items-center gap-1">
+              <Cpu className="w-3 h-3 text-cyan-400" />
+              <span>Launchpad Presets:</span>
+            </span>
+            <button
+              onClick={onExploreDemo}
+              className="px-2.5 py-1 rounded-lg bg-zinc-900/90 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 hover:text-cyan-300 transition-colors flex items-center gap-1.5"
+            >
+              <span>🪙 Crypto Arbitrage</span>
+            </button>
+            <button
+              onClick={onExploreDemo}
+              className="px-2.5 py-1 rounded-lg bg-zinc-900/90 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 hover:text-cyan-300 transition-colors flex items-center gap-1.5"
+            >
+              <span>💳 SaaS Billing</span>
+            </button>
+            <button
+              onClick={onExploreDemo}
+              className="px-2.5 py-1 rounded-lg bg-zinc-900/90 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 hover:text-cyan-300 transition-colors flex items-center gap-1.5"
+            >
+              <span>🇪🇺 EU AI Act Audit</span>
+            </button>
+            <button
+              onClick={onExploreDemo}
+              className="px-2.5 py-1 rounded-lg bg-zinc-900/90 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 hover:text-cyan-300 transition-colors flex items-center gap-1.5"
+            >
+              <span>🇸🇰 Slovak Copilot (SK/EN)</span>
             </button>
           </div>
 

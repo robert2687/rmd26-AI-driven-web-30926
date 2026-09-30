@@ -24,12 +24,12 @@ export const Footer: React.FC<FooterProps> = ({ onOpenConsole, onNavigateSection
   };
 
   return (
-    <footer className="relative bg-zinc-950 border-t border-zinc-800/80 overflow-hidden">
+    <footer className="relative bg-zinc-950 border-t border-zinc-800/80 overflow-hidden w-full">
       {/* High-Impact CTA Banner */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16">
-        <div className="relative rounded-3xl border border-zinc-800/90 bg-gradient-to-b from-zinc-900/90 to-zinc-950 p-8 sm:p-14 text-center overflow-hidden shadow-2xl">
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16">
+        <div className="relative rounded-3xl border border-zinc-800/90 bg-gradient-to-b from-zinc-900/90 to-zinc-950 p-6 sm:p-14 text-center overflow-hidden shadow-2xl">
           {/* Subtle glow cloud */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-violet-600/10 blur-[100px] pointer-events-none rounded-full" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 sm:w-96 max-w-full h-80 sm:h-96 bg-violet-600/10 blur-[100px] pointer-events-none rounded-full" />
 
           <div className="relative z-10 max-w-3xl mx-auto">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-xs font-mono text-cyan-400 mb-6">
@@ -91,7 +91,7 @@ export const Footer: React.FC<FooterProps> = ({ onOpenConsole, onNavigateSection
         </div>
 
         {/* Links Navigation Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 pt-16 pb-12 border-b border-zinc-800/80">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 pt-16 pb-12 border-b border-zinc-800/80">
           <div>
             <h4 className="text-xs font-mono uppercase tracking-wider text-zinc-300 font-semibold mb-4">
               Platform &amp; Core
@@ -110,6 +110,11 @@ export const Footer: React.FC<FooterProps> = ({ onOpenConsole, onNavigateSection
               <li>
                 <button onClick={() => onNavigateSection('agents')} className="hover:text-white transition-colors">
                   Specialist Symphony
+                </button>
+              </li>
+              <li>
+                <button onClick={() => onNavigateSection('roadmap')} className="hover:text-cyan-400 transition-colors">
+                  Development Roadmap
                 </button>
               </li>
               <li>
